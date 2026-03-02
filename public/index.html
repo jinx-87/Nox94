@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Requirement Card Crafter</title>
     <style>
-        /* Copy all your existing styles here - they remain the same */
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
@@ -396,7 +395,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        endpoint: endpoint,  // Send only the endpoint path
+                        endpoint: endpoint,
                         method: method,
                         headers: headers,
                         data: data,
@@ -404,7 +403,8 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                 }
                 
                 return await response.json();
@@ -426,7 +426,6 @@
                 'x-user-jwt': authToken
             };
             
-            // Send only the endpoint path
             const endpoint = '/user/funds';
             
             try {
@@ -529,6 +528,7 @@
                 // Step 1: Collect cards for each requirement
                 accountSection.innerHTML += `<p class="info">Collecting cards from required collections...</p>`;
                 
+                // Store cards by requirement - we'll use these as our pool
                 const cardsByRequirement = {};
                 
                 for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
@@ -541,6 +541,12 @@
                         if (stopProcess) return;
                         
                         const collectionCards = await getCollectionCards(authToken, senderID, collectionId);
+                        
+                        // Log the first card to see its structure
+                        if (collectionCards.length > 0) {
+                            console.log(`Sample card from collection ${collectionId}:`, collectionCards[0]);
+                        }
+                        
                         cards.push(...collectionCards);
                         
                         accountSection.innerHTML += `<p>  - Collection ${collectionId}: ${collectionCards.length} cards</p>`;
@@ -567,7 +573,7 @@
                 
                 accountSection.innerHTML += `<p class="success">Based on cards: Can perform ${cardBasedBatches} crafting operation(s)</p>`;
                 
-                // Step 2.1: Check user funds
+                // Step 3: Check user funds
                 accountSection.innerHTML += `<p class="info">Checking account funds...</p>`;
                 
                 let silverBalance = 0;
@@ -609,11 +615,16 @@
                     
                     const initialSilver = silverBalance;
                     
+                    // Keep track of used cards to prevent reuse
+                    const usedCardIds = new Set();
+                    
+                    // Step 4: Process each crafting batch
                     for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
                         if (stopProcess) break;
                         
                         accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches}</strong></p>`;
                         
+                        // Check funds before each craft (except the first)
                         if (batchNum > 1) {
                             try {
                                 const currentSilver = await checkUserFunds(authToken);
@@ -626,26 +637,40 @@
                             }
                         }
                         
-                        const craftResult = await processCraft(authToken, senderID, cardsByRequirement, batchNum, accountSection);
+                        // Process the craft with proper card tracking
+                        const craftResult = await processCraft(
+                            authToken, 
+                            senderID, 
+                            cardsByRequirement, 
+                            usedCardIds,
+                            batchNum, 
+                            accountSection
+                        );
                         
                         if (craftResult) {
                             successfulCrafts++;
+                        } else {
+                            // If craft failed, we should stop or continue based on error type
+                            accountSection.innerHTML += `<p class="warning">Craft ${batchNum} failed, but continuing with next...</p>`;
                         }
                         
                         completedCrafts++;
                         totalCrafts++;
                         updateStats();
                         
+                        // Update progress
                         const accountProgress = (batchNum / actualBatches) * 100;
                         const totalProgress = ((currentAccountIndex * 100) + accountProgress) / accountPairs.length;
                         document.getElementById('progressBar').style.width = `${totalProgress}%`;
                         
+                        // Delay between crafts
                         if (batchNum < actualBatches) {
                             const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
                             await delay(delayTime);
                         }
                     }
                     
+                    // Check final funds
                     try {
                         const finalSilver = await checkUserFunds(authToken);
                         const formattedFinalSilver = finalSilver.toLocaleString();
@@ -663,12 +688,22 @@
                     
                     const actualBatches = Math.min(cardBasedBatches, maxCrafts);
                     
+                    // Keep track of used cards to prevent reuse
+                    const usedCardIds = new Set();
+                    
                     for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
                         if (stopProcess) break;
                         
                         accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches} (funds check failed, proceeding anyway)</strong></p>`;
                         
-                        const craftResult = await processCraft(authToken, senderID, cardsByRequirement, batchNum, accountSection);
+                        const craftResult = await processCraft(
+                            authToken, 
+                            senderID, 
+                            cardsByRequirement, 
+                            usedCardIds,
+                            batchNum, 
+                            accountSection
+                        );
                         
                         if (craftResult) {
                             successfulCrafts++;
@@ -693,6 +728,7 @@
                 
             } catch (error) {
                 accountSection.innerHTML += `<p class="error">Error processing account: ${error.message}</p>`;
+                console.error('Account processing error:', error);
             }
         }
         
@@ -719,12 +755,21 @@
                 'x-user-jwt': authToken
             };
             
-            // Send only the endpoint path
             const endpoint = `/collections/${collectionId}/users/${senderID}/owned2`;
             
             try {
                 const response = await sendProxyRequest(endpoint, 'GET', headers);
-                return response?.data?.cards || [];
+                
+                // Handle different response structures
+                if (response?.data?.cards) {
+                    return response.data.cards;
+                } else if (Array.isArray(response?.data)) {
+                    return response.data;
+                } else if (Array.isArray(response)) {
+                    return response;
+                }
+                
+                return [];
             } catch (error) {
                 console.error(`Error fetching cards for collection ${collectionId}:`, error);
                 throw error;
@@ -732,7 +777,7 @@
         }
         
         // Process a single craft
-        async function processCraft(authToken, senderID, cardsByRequirement, batchNumber, accountSection) {
+        async function processCraft(authToken, senderID, cardsByRequirement, usedCardIds, batchNumber, accountSection) {
             const headers = {
                 'Content-Type': 'application/json',
                 'x-user-jwt': authToken
@@ -741,20 +786,36 @@
             const craftingPlanId = document.getElementById('craftingPlanId').value || '3202';
             const silvercoins = parseInt(document.getElementById('silvercoins').value) || 5000;
             
-            // Send only the endpoint path
             const endpoint = `/crafting/plans/${craftingPlanId}`;
             
-            // Build requirements array
+            // Build requirements array using cards that haven't been used yet
             const requirements = [];
+            const cardsUsedInThisCraft = [];
             
-            for (const [requirementId, cards] of Object.entries(cardsByRequirement)) {
-                const cardsNeeded = REQUIREMENTS_CONFIG[requirementId].cardsPerCraft;
-                const startIndex = (batchNumber - 1) * cardsNeeded;
-                const selectedCards = cards.slice(startIndex, startIndex + cardsNeeded);
+            for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
+                const cardsNeeded = config.cardsPerCraft;
                 
-                if (selectedCards.length < cardsNeeded) {
-                    throw new Error(`Not enough cards for requirement ${requirementId}`);
+                // Get all cards for this requirement
+                const allCards = cardsByRequirement[requirementId] || [];
+                
+                // Filter out cards that have already been used
+                const availableCards = allCards.filter(card => !usedCardIds.has(card.id));
+                
+                if (availableCards.length < cardsNeeded) {
+                    throw new Error(`Not enough unused cards for requirement ${requirementId}. Need ${cardsNeeded}, have ${availableCards.length}`);
                 }
+                
+                // Take the first N unused cards
+                const selectedCards = availableCards.slice(0, cardsNeeded);
+                
+                // Mark these cards as used
+                selectedCards.forEach(card => {
+                    usedCardIds.add(card.id);
+                    cardsUsedInThisCraft.push({
+                        id: card.id,
+                        requirementId: requirementId
+                    });
+                });
                 
                 requirements.push({
                     requirementId: parseInt(requirementId),
@@ -768,17 +829,22 @@
             };
             
             accountSection.innerHTML += `<p>Sending crafting request for batch ${batchNumber}...</p>`;
+            accountSection.innerHTML += `<p>Using card IDs: ${cardsUsedInThisCraft.map(c => c.id).join(', ')}</p>`;
             
             try {
                 const responseCraft = await sendProxyRequest(endpoint, 'POST', headers, craftingBody);
                 
                 if (!responseCraft.success) {
+                    // If crafting fails, we should "unuse" the cards
+                    cardsUsedInThisCraft.forEach(card => usedCardIds.delete(card.id));
                     throw new Error(`Crafting failed: ${JSON.stringify(responseCraft.error || responseCraft)}`);
                 }
                 
                 accountSection.innerHTML += `<p class="success">Crafting request successful!</p>`;
                 
+                // Process slots from the response
                 const slots = responseCraft.data?.slots || [];
+                
                 if (!slots || slots.length === 0) {
                     accountSection.innerHTML += `<p class="warning">No slots found in response</p>`;
                     return true;
@@ -786,6 +852,10 @@
                 
                 accountSection.innerHTML += `<p>Found ${slots.length} slots to open</p>`;
                 
+                // Log all slot IDs for debugging
+                accountSection.innerHTML += `<p>Slot IDs: ${slots.map(s => s.id).join(', ')}</p>`;
+                
+                // Open each slot
                 for (let i = 0; i < slots.length; i++) {
                     if (stopProcess) break;
                     
@@ -795,18 +865,30 @@
                     try {
                         const slotResult = await openSlot(authToken, slotId);
                         
-                        if (slotResult && slotResult.data?.cards?.length > 0) {
-                            const card = slotResult.data.cards[0];
-                            accountSection.innerHTML += `<p class="success">Slot ${i + 1}: Got ${card.type} ${card.mintBatch}${card.mintNumber} with rating ${card.rating}</p>`;
+                        if (slotResult && slotResult.success) {
+                            if (slotResult.data?.cards?.length > 0) {
+                                const card = slotResult.data.cards[0];
+                                const cardInfo = `${card.type || 'Unknown'} ${card.mintBatch || ''}${card.mintNumber || ''}`.trim();
+                                accountSection.innerHTML += `<p class="success">Slot ${i + 1}: Got ${cardInfo} with rating ${card.rating || 'N/A'}</p>`;
+                            } else {
+                                accountSection.innerHTML += `<p class="success">Slot ${i + 1} opened successfully</p>`;
+                            }
+                        } else {
+                            throw new Error(`Slot open failed: ${JSON.stringify(slotResult)}`);
                         }
                         
+                        // Delay between slot openings (but not after the last one)
                         if (i < slots.length - 1) {
                             await delay(2000);
                         }
                         
                     } catch (error) {
                         accountSection.innerHTML += `<p class="error">Error opening slot ${i + 1}: ${error.message}</p>`;
-                        continue;
+                        
+                        // If this is the last slot and it failed, we still consider the craft partially successful
+                        if (i === slots.length - 1) {
+                            accountSection.innerHTML += `<p class="warning">Last slot failed, but craft completed</p>`;
+                        }
                     }
                 }
                 
@@ -826,7 +908,6 @@
                 'x-user-jwt': authToken
             };
             
-            // Send only the endpoint path
             const endpoint = `/crafting/slots/${slotId}/open-instant`;
             
             try {
@@ -838,6 +919,7 @@
                 
                 return response;
             } catch (error) {
+                console.error(`Error opening slot ${slotId}:`, error);
                 throw error;
             }
         }
