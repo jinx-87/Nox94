@@ -18,17 +18,18 @@ const CONFIG = {
 
 // Prize mapping for console logs only
 const PRIZE_MAP = {
-    11948: '5,000 Spraycoins',
-    11953: 'Standard Box 2026',
-    11947: '500 Spraycoins',
-    11949: '1,000,000 Spraycoins',
-    11950: '100,000 Spraycoins',
-    11951: '2,500 Spraycoins',
-    11952: '1,000 Spraycoins'
+    11986: '5,000 Spraycoins',
+    11981: 'Standard Box 2026',
+    12013: 'EPL 23 Box 2026',
+    11980: '500 Spraycoins',
+    11985: '1,000,000 Spraycoins',
+    11984: '100,000 Spraycoins',
+    11983: '2,500 Spraycoins',
+    11982: '1,000 Spraycoins'
 };
 
 // Pack IDs that need opening
-const PACK_IDS = [11953, 12013];
+const PACK_IDS = [11981, 12013];
 
 // Retry configuration
 const RETRY_CONFIG = {
