@@ -1,567 +1,762 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Spin Bot Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #f5f7fa;
-      --panel: #ffffff;
-      --muted: #6b7280;
-      --text: #1f2937;
-      --accent: #2563eb;
-      --good: #059669;
-      --warn: #d97706;
-      --bad: #dc2626;
-      --chip: #e5e7eb;
-      --border: #e2e8f0;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border);
-      background: var(--panel);
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    h1 { margin: 0; font-size: 24px; font-weight: 600; }
-    .accent { color: var(--accent); }
-    .wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
-    .card { 
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px; 
-      overflow: hidden; 
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .card h2 { 
-      font-size: 16px; 
-      font-weight: 600;
-      margin: 0; 
-      padding: 16px 20px; 
-      border-bottom: 1px solid var(--border); 
-      background: #f9fafb;
-    }
-    .section { padding: 20px; }
-    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-    .btn {
-      background: white; 
-      border: 1px solid var(--border); 
-      color: var(--text);
-      padding: 8px 16px; 
-      border-radius: 8px; 
-      cursor: pointer; 
-      transition: all .15s;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .btn:hover { 
-      border-color: var(--accent); 
-      color: var(--accent);
-      background: #f8fafc;
-    }
-    .btn.small { padding: 4px 10px; font-size: 12px; }
-    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
-    .btn.primary:hover { background: #1d4ed8; }
-    .btn.success { background: var(--good); border-color: var(--good); color: white; }
-    .btn.warning { background: var(--warn); border-color: var(--warn); color: white; }
-    .btn.danger { background: var(--bad); border-color: var(--bad); color: white; }
-    .btn.info { background: #6b7280; border-color: #6b7280; color: white; }
-    .user-card {
-      background: #f9fafb; 
-      border: 1px solid var(--border); 
-      border-radius: 10px; 
-      padding: 16px; 
-      margin-bottom: 12px;
-    }
-    .user-head { display: flex; gap: 16px; align-items: center; justify-content: space-between; }
-    .user-head h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--accent); }
-    .user-nick {
-      font-size: 14px;
-      color: var(--muted);
-      margin-left: 4px;
-      font-weight: normal;
-    }
-    .kv { 
-      display: grid; 
-      grid-template-columns: 140px 1fr 140px 1fr; 
-      gap: 12px 16px; 
-      margin: 12px 0; 
-      font-size: 13px; 
-    }
-    .muted { color: var(--muted); }
-    .ok { color: var(--good); }
-    .bad { color: var(--bad); }
-    .warn { color: var(--warn); }
-    .jwt-token {
-      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-      font-size: 8px;
-      color: #4b5563;
-      background: #f3f4f6;
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #e5e7eb;
-      width: 100%;
-      overflow-x: auto;
-      white-space: nowrap;
-      margin: 8px 0;
-      user-select: all;
-    }
-    pre.logs {
-      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-      white-space: pre-wrap; 
-      background: #f8fafc; 
-      border: 1px solid var(--border);
-      padding: 16px; 
-      border-radius: 8px; 
-      max-height: 400px; 
-      overflow: auto; 
-      font-size: 12px;
-      color: #1e293b;
-      line-height: 1.6;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: var(--panel);
-      padding: 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    .stat-value {
-      font-size: 28px;
-      font-weight: 600;
-      color: var(--accent);
-      line-height: 1.2;
-    }
-    .stat-label {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: var(--chip);
-      border-radius: 2px;
-      margin-top: 8px;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width 0.3s ease;
-    }
-    .settings-panel {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .input-group label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      min-width: 80px;
-    }
-    .input-group input {
-      background: white;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 12px;
-      border-radius: 6px;
-      width: 100px;
-      font-size: 14px;
-    }
-    .input-group input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .badge-idle { background: #e5e7eb; color: #374151; }
-    .badge-refreshing { background: #fef3c7; color: #92400e; }
-    .badge-claiming { background: #ede9fe; color: #5b21b6; }
-    .badge-checking { background: #dbeafe; color: #1e40af; }
-    .badge-spinning { background: #cffafe; color: #155e75; }
-    .badge-ready { background: #d1fae5; color: #065f46; }
-    .badge-completed { background: #9ca3af; color: #1f2937; }
-    .badge-error { background: #fee2e2; color: #991b1b; }
-    .funds-diff {
-      font-size: 11px;
-      margin-left: 4px;
-    }
-    .positive { color: var(--good); }
-    .negative { color: var(--bad); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Requirement Card Brewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-section, .results-section, .control-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .results-section {
+            grid-column: 1 / -1;
+        }
+        .control-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #8B4513;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h3 {
+            color: #8B4513;
+            margin-top: 0;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            min-width: 120px;
+        }
+        #startButton {
+            background-color: #8B4513;
+            color: white;
+        }
+        #startButton:hover:not(:disabled) {
+            background-color: #6b3410;
+        }
+        #pauseButton {
+            background-color: #FFA500;
+            color: white;
+        }
+        #pauseButton:hover:not(:disabled) {
+            background-color: #cc8400;
+        }
+        #resumeButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #resumeButton:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        #stopButton {
+            background-color: #f44336;
+            color: white;
+        }
+        #stopButton:hover:not(:disabled) {
+            background-color: #d32f2f;
+        }
+        #proceedButton {
+            background-color: #2196F3;
+            color: white;
+        }
+        #proceedButton:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+        #newSessionButton {
+            background-color: #9C27B0;
+            color: white;
+        }
+        #newSessionButton:hover {
+            background-color: #7B1FA2;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .progress-container {
+            margin: 20px 0;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #8B4513;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 4px solid #8B4513;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        #resultContainer {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .log-success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .log-error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .log-warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .log-info {
+            color: #3498db;
+        }
+        .log-account {
+            color: #8B4513;
+            font-weight: bold;
+            font-size: 14px;
+            background-color: #f0e6dd;
+            padding: 5px;
+            margin: 10px 0 5px 0;
+        }
+        .log-brew-header {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .log-highlight {
+            color: #8B4513;
+            font-weight: bold;
+            background-color: #fff3e0;
+            padding: 5px;
+            border-left: 4px solid #8B4513;
+        }
+        .log-summary-header {
+            color: #8B4513;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .log-small-font {
+            font-size: 11px;
+            color: #666;
+            margin-left: 20px;
+        }
+        .collection-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .collection-item {
+            background: #f0e6dd;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 4px solid #8B4513;
+        }
+        .session-info {
+            background: #f0e6dd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .session-id {
+            font-family: monospace;
+            font-size: 14px;
+            color: #8B4513;
+            background: #fff;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .scan-results-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+        .filter-group {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .inline-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inline-input label {
+            width: auto;
+            margin-bottom: 0;
+        }
+        .inline-input input {
+            width: 100px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .control-section {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Spin Bot <span class="accent">Dashboard</span></h1>
-    <div class="row">
-      <button class="btn" id="refreshAll">🔄 Refresh</button>
-      <button class="btn info" id="checkAllFunds">💰 Check All Funds</button>
-    </div>
-  </header>
-
-  <div class="wrap">
-    <!-- System Stats -->
-    <div class="stats-grid" id="systemStats">
-      <div class="stat-card">
-        <div class="stat-value" id="totalUsers">0</div>
-        <div class="stat-label">Total Users</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="activeCount">0</div>
-        <div class="stat-label">Active in Pool</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="queueLength">0</div>
-        <div class="stat-label">In Queue</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="totalSpins">0</div>
-        <div class="stat-label">Total Spins</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="totalPacks">0</div>
-        <div class="stat-label">Total Packs</div>
-      </div>
-    </div>
-
-    <!-- Control Panel -->
-    <div class="card">
-      <h2>Control Panel</h2>
-      <div class="section">
-        <div class="settings-panel">
-          <div class="input-group">
-            <label>Max Concurrent:</label>
-            <input type="number" id="maxConcurrent" min="1" max="50" value="5">
-          </div>
-          <div class="input-group">
-            <label>Spin Delay (s):</label>
-            <input type="number" id="spinDelay" min="1" max="30" step="0.1" value="7">
-          </div>
-          <div class="input-group">
-            <label>Min Funds:</label>
-            <input type="number" id="minFunds" min="1000" max="1000000" step="1000" value="10000">
-          </div>
-          <button class="btn success" id="startButton">▶️ Start</button>
-          <button class="btn warning" id="pauseButton">⏸️ Pause</button>
-          <button class="btn danger" id="resetButton">🔄 Reset Stats</button>
-        </div>
-        <div class="row" style="margin-top: 16px;">
-          <span class="status-badge" id="systemStatus">System Ready</span>
-          <span class="muted" id="statusDetail"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Users Panel -->
-    <div class="card">
-      <h2>Users</h2>
-      <div class="section" id="usersPanel">
-        <div class="muted">Loading users...</div>
-      </div>
-    </div>
-
-    <!-- Activity Logs -->
-    <div class="card">
-      <h2>Activity Logs</h2>
-      <div class="section">
-        <div class="row" style="margin-bottom:16px; justify-content:space-between;">
-          <button class="btn small" id="refreshLogs">Refresh Logs</button>
-          <span class="muted">Showing latest events</span>
-        </div>
-        <pre class="logs" id="logsBox">Loading logs...</pre>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // State
-    let systemState = {
-      isPaused: false,
-      settings: {
-        maxConcurrent: 5,
-        spinDelay: 7,
-        minFundsThreshold: 10000
-      },
-      activeCount: 0,
-      queueLength: 0,
-      totalUsers: 0
-    };
-
-    let autoRefresh = true;
-    let lastScrollPosition = 0;
-
-    // API Functions
-    async function fetchUsers() {
-      const r = await fetch('/api/users');
-      if (!r.ok) throw new Error('Failed to fetch users');
-      return r.json();
-    }
-
-    async function fetchDebugLogs(limit = 100) {
-      const r = await fetch(`/api/debug-logs?limit=${limit}`);
-      if (!r.ok) throw new Error('Failed to fetch logs');
-      return r.json();
-    }
-
-    async function fetchSystemState() {
-      const r = await fetch('/api/system-state');
-      if (!r.ok) throw new Error('Failed to fetch system state');
-      return r.json();
-    }
-
-    async function sendCommand(endpoint, body = {}) {
-      const r = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      return r.json();
-    }
-
-    // Render Functions
-    function renderUsers(users) {
-      const panel = document.getElementById('usersPanel');
-      const userIds = Object.keys(users).sort();
-      
-      if (!userIds.length) {
-        panel.innerHTML = '<div class="muted">No users loaded.</div>';
-        return;
-      }
-
-      // Calculate totals
-      const totals = {
-        totalSpins: userIds.reduce((sum, id) => sum + (users[id].totalSpinsRun || 0), 0),
-        totalPacks: userIds.reduce((sum, id) => sum + (users[id].totalPacksOpened || 0), 0)
-      };
-
-      document.getElementById('totalSpins').textContent = totals.totalSpins;
-      document.getElementById('totalPacks').textContent = totals.totalPacks;
-
-      const parts = [];
-
-      userIds.forEach((id) => {
-        const u = users[id];
-        const statusClass = `badge-${u.status || 'idle'}`;
-        const progressPercent = u.spinsRemaining ? ((u.spinsDoneInRound || 0) / ((u.spinsDoneInRound || 0) + u.spinsRemaining) * 100) : 0;
-        
-        // Calculate funds difference
-        const fundsDiff = u.currentFunds - u.initialFunds;
-        const diffClass = fundsDiff > 0 ? 'positive' : (fundsDiff < 0 ? 'negative' : '');
-        const diffSign = fundsDiff > 0 ? '+' : '';
-        
-        parts.push(`
-          <div class="user-card">
-            <div class="user-head">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <h3>${id} <span class="user-nick">${u.nick || ''}</span></h3>
-                <span class="status-badge ${statusClass}">${u.status || 'idle'}</span>
-              </div>
-              <div class="row">
-                <button class="btn small" data-act="refresh" data-id="${id}">🔄 Refresh Token</button>
-                <button class="btn small" data-act="check-funds" data-id="${id}">💰 Check Funds</button>
-              </div>
-            </div>
-            
-            <!-- Full JWT token for copying -->
-            <div class="jwt-token" title="Select all to copy">
-              ${u.jwtToken || 'No token'}
-            </div>
-            
-            <div class="kv">
-              <span class="muted">Status</span>
-              <span>${u.isActive ? '✅ Active' : '❌ Inactive'}</span>
-              <span class="muted">Spins (Total/Round)</span>
-              <span>${u.totalSpinsRun || 0} / ${u.spinsDoneInRound || 0} of ${(u.spinsDoneInRound || 0) + (u.spinsRemaining || 0)}</span>
-              
-              <span class="muted">Initial Funds</span>
-              <span>${(u.initialFunds || 0).toLocaleString()}</span>
-              <span class="muted">Current Funds</span>
-              <span>
-                ${(u.currentFunds || 0).toLocaleString()}
-                <span class="funds-diff ${diffClass}">(${diffSign}${fundsDiff.toLocaleString()})</span>
-              </span>
-              
-              <span class="muted">Packs Opened</span>
-              <span>${u.totalPacksOpened || 0}</span>
-              <span class="muted">Achievements</span>
-              <span>${u.achievementsClaimed || 0}</span>
-              
-              <span class="muted">Last Error</span>
-              <span class="${u.lastError ? 'bad' : 'muted'}">${u.lastError || 'None'}</span>
-            </div>
-            
-            ${(u.spinsRemaining || 0) > 0 ? `
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${progressPercent}%"></div>
-            </div>
-            ` : ''}
-            
-            ${u.startTime ? `
-            <div style="margin-top:8px; font-size:11px; color:var(--muted);">
-              Started: ${new Date(u.startTime).toLocaleTimeString()}
-              ${u.endTime ? ` · Completed: ${new Date(u.endTime).toLocaleTimeString()}` : ''}
-            </div>
-            ` : ''}
-          </div>
-        `);
-      });
-
-      panel.innerHTML = parts.join('\n');
-      
-      // Add event listeners
-      panel.querySelectorAll('button[data-act="refresh"]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.currentTarget.getAttribute('data-id');
-          try {
-            await sendCommand(`/api/user/${id}/refresh`);
-            await loadAll();
-          } catch (err) {
-            alert(err.message);
-          }
-        });
-      });
-      
-      panel.querySelectorAll('button[data-act="check-funds"]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.currentTarget.getAttribute('data-id');
-          try {
-            await sendCommand(`/api/user/${id}/check-funds`);
-            await loadAll();
-          } catch (err) {
-            alert(err.message);
-          }
-        });
-      });
-    }
-
-    function renderLogs(logs) {
-      const box = document.getElementById('logsBox');
-      if (!logs || !logs.length) {
-        box.textContent = 'No logs yet.';
-        return;
-      }
-      
-      // Save scroll position
-      lastScrollPosition = box.scrollTop;
-      
-      const lines = logs.map(entry => {
-        const time = entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '';
-        return `[${time}] [${entry.type || 'INFO'}] ${entry.userId}: ${entry.message}`;
-      });
-      
-      box.textContent = lines.join('\n');
-      
-      // Restore scroll position
-      box.scrollTop = lastScrollPosition;
-    }
-
-    function updateSystemStats(state) {
-      document.getElementById('totalUsers').textContent = state.totalUsers || 0;
-      document.getElementById('activeCount').textContent = state.activeCount || 0;
-      document.getElementById('queueLength').textContent = state.queueLength || 0;
-      
-      const systemStatus = document.getElementById('systemStatus');
-      systemStatus.textContent = state.isPaused ? '⏸️ PAUSED' : (state.activeCount > 0 ? '▶️ RUNNING' : '⏹️ STOPPED');
-      systemStatus.className = `status-badge ${state.isPaused ? 'badge-warning' : (state.activeCount > 0 ? 'badge-spinning' : 'badge-idle')}`;
-      
-      document.getElementById('statusDetail').textContent = 
-        `Max: ${state.settings.maxConcurrent}, Delay: ${state.settings.spinDelay}s, Min: ${state.settings.minFundsThreshold}`;
-    }
-
-    // Load Functions
-    async function loadAll() {
-      try {
-        const [users, logs, state] = await Promise.all([
-          fetchUsers(),
-          fetchDebugLogs(100),
-          fetchSystemState()
-        ]);
-        
-        systemState = state;
-        updateSystemStats(state);
-        renderUsers(users);
-        renderLogs(logs);
-      } catch (err) {
-        console.error('Failed to load:', err);
-      }
-    }
-
-    // Event Listeners
-    document.getElementById('refreshAll').addEventListener('click', () => {
-      autoRefresh = false;
-      loadAll();
-      setTimeout(() => { autoRefresh = true; }, 1000);
-    });
+    <h1>🍺 Multi-Requirement Card Brewer</h1>
     
-    document.getElementById('checkAllFunds').addEventListener('click', async () => {
-      await sendCommand('/api/check-all-funds');
-      await loadAll();
-    });
+    <div class="container">
+        <div class="input-section">
+            <h2>Account Configuration</h2>
+            
+            <div class="input-group">
+                <label for="authTokensTextarea">JWT Tokens (one per line):</label>
+                <textarea id="authTokensTextarea" placeholder="Paste JWT tokens here, one per line"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="senderIDsTextarea">Sender IDs (one per line):</label>
+                <textarea id="senderIDsTextarea" placeholder="Paste sender IDs here, one per line"></textarea>
+            </div>
+            
+            <div class="filter-group">
+                <h3>Card Filters</h3>
+                <div class="input-group">
+                    <label for="minMintNumber">Minimum Mint Number:</label>
+                    <input type="number" id="minMintNumber" value="30" min="1" placeholder="Only use cards with mint >= this value">
+                </div>
+                <div class="input-group">
+                    <label>Status Filter:</label>
+                    <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                        Only cards with status "available" will be used
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalCards">0</div>
+                    <div class="stat-label">Total Cards</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalBrews">0</div>
+                    <div class="stat-label">Total Brews</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="completedBrews">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="successRate">0%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <h2>Brewing Configuration</h2>
+            
+            <div class="input-group">
+                <label>Brewing Plan Requirements:</label>
+                <div class="collection-info">
+                    <div class="collection-item">
+                        <strong>Requirement 3235 (16 cards):</strong><br>
+                        Collections: 17920, 17921, 17922
+                    </div>
+                    <div class="collection-item">
+                        <strong>Requirement 3236 (8 cards):</strong><br>
+                        Collections: 17923, 17924, 17925
+                    </div>
+                    <div class="collection-item">
+                        <strong>Requirement 3237 (4 cards):</strong><br>
+                        Collections: 17953, 17986, 17987
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="maxBrews">Max Brews per Account:</label>
+                <input type="number" id="maxBrews" value="10" min="1" max="100">
+            </div>
+            
+            <div class="input-group">
+                <label for="operationDelay">Operation Delay (ms):</label>
+                <input type="number" id="operationDelay" value="3400" min="1000" max="30000">
+            </div>
+            
+            <div class="input-group">
+                <label for="brewingPlanId">Brewing Plan ID:</label>
+                <input type="text" id="brewingPlanId" value="3202">
+            </div>
+            
+            <div class="input-group">
+                <label for="silvercoins">Silver Coins per Brew:</label>
+                <input type="number" id="silvercoins" value="5000" min="0">
+            </div>
+        </div>
+    </div>
     
-    document.getElementById('refreshLogs').addEventListener('click', async () => {
-      const logs = await fetchDebugLogs(100);
-      renderLogs(logs);
-    });
+    <div class="control-section">
+        <div class="session-info">
+            <h3>Session Control</h3>
+            <div class="button-group">
+                <button id="startButton">Start Brewing</button>
+                <button id="pauseButton" disabled>Pause</button>
+                <button id="resumeButton" disabled>Resume</button>
+                <button id="stopButton" disabled>Stop</button>
+                <button id="newSessionButton">New Session</button>
+            </div>
+            <div>
+                <strong>Session ID:</strong> <span id="sessionIdDisplay" class="session-id">Not started</span>
+            </div>
+        </div>
+        
+        <div class="session-info">
+            <h3>Scan Results</h3>
+            <div id="scanResults" class="scan-results-box">
+                <p>No scan results yet. Start brewing to scan collections.</p>
+            </div>
+            <button id="proceedButton" disabled>Proceed to Brew</button>
+        </div>
+        
+        <div class="session-info">
+            <h3>Progress</h3>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="stats" style="margin-top: 10px;">
+                <div class="stat-box">
+                    <div class="stat-value" id="accountsProcessed">0</div>
+                    <div class="stat-label">Accounts</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="brewsCompleted">0</div>
+                    <div class="stat-label">Brews Done</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="results-section">
+        <h2>Results & Logs</h2>
+        <div id="resultContainer"></div>
+    </div>
 
-    document.getElementById('startButton').addEventListener('click', async () => {
-      const maxConcurrent = document.getElementById('maxConcurrent').value;
-      const spinDelay = document.getElementById('spinDelay').value;
-      const minFundsThreshold = document.getElementById('minFunds').value;
-      
-      await sendCommand('/api/start', { maxConcurrent, spinDelay, minFundsThreshold });
-      await loadAll();
-    });
-
-    document.getElementById('pauseButton').addEventListener('click', async () => {
-      await sendCommand('/api/pause');
-      await loadAll();
-    });
-
-    document.getElementById('resetButton').addEventListener('click', async () => {
-      if (confirm('Reset all statistics? User tokens will be preserved.')) {
-        await sendCommand('/api/reset');
-        await loadAll();
-      }
-    });
-
-    // Auto-refresh every 3 seconds
-    setInterval(() => {
-      if (autoRefresh) {
-        loadAll();
-      }
-    }, 3000);
-
-    // Initial load
-    loadAll();
-  </script>
+    <script>
+        // Configuration
+        const API_URL = window.location.origin;
+        let currentSessionId = null;
+        let statusInterval = null;
+        
+        // Collections mapping for each requirement
+        const REQUIREMENTS_CONFIG = {
+            3235: {
+                collectionIds: [17920, 17921, 17922],
+                cardsPerBrew: 16
+            },
+            3236: {
+                collectionIds: [17923, 17924, 17925],
+                cardsPerBrew: 8
+            },
+            3237: {
+                collectionIds: [17953, 17986, 17987],
+                cardsPerBrew: 4
+            }
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('startButton').addEventListener('click', startBrewing);
+            document.getElementById('pauseButton').addEventListener('click', pauseSession);
+            document.getElementById('resumeButton').addEventListener('click', resumeSession);
+            document.getElementById('stopButton').addEventListener('click', stopSession);
+            document.getElementById('proceedButton').addEventListener('click', proceedAfterScan);
+            document.getElementById('newSessionButton').addEventListener('click', newSession);
+        });
+        
+        // Function to add log message to container
+        function addLogToContainer(message, type = 'info') {
+            const container = document.getElementById('resultContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            // Format timestamp
+            const timestamp = new Date().toLocaleTimeString();
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Function to update stats
+        function updateStats(sessionData) {
+            document.getElementById('totalCards').textContent = sessionData.totalCardsCollected || 0;
+            document.getElementById('totalBrews').textContent = sessionData.totalBrews || 0;
+            document.getElementById('completedBrews').textContent = sessionData.completedBrews || 0;
+            const successRate = sessionData.totalBrews > 0 ? 
+                Math.round((sessionData.successfulBrews / sessionData.totalBrews) * 100) : 0;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+            
+            document.getElementById('accountsProcessed').textContent = sessionData.accountsProcessed || 0;
+            document.getElementById('brewsCompleted').textContent = sessionData.completedBrews || 0;
+            document.getElementById('progressBar').style.width = `${sessionData.progress || 0}%`;
+            
+            // Update scan results if available
+            if (sessionData.scanResults) {
+                updateScanResults(sessionData.scanResults);
+            }
+        }
+        
+        // Update scan results display
+        function updateScanResults(results) {
+            const scanDiv = document.getElementById('scanResults');
+            scanDiv.innerHTML = `
+                <p><strong>Account ${results.accountNumber}</strong> (Sender: ${results.senderID})</p>
+                <p>📊 Based on cards: ${results.cardBasedBatches} brews possible</p>
+                <p>💰 Based on funds: ${results.fundBasedBatches} brews possible (Balance: ${results.silverBalance.toLocaleString()} silver)</p>
+                <p class="warning-box" style="margin:10px 0; padding:10px;">
+                    ⚠️ Lowest mint that will be used: <strong>${results.lowestMintUsed}</strong>
+                </p>
+                <p>Total available cards: ${results.totalCards}</p>
+            `;
+            document.getElementById('proceedButton').disabled = false;
+        }
+        
+        // Start brewing session
+        async function startBrewing() {
+            // Get inputs
+            const authTokensText = document.getElementById('authTokensTextarea').value.trim();
+            const senderIDsText = document.getElementById('senderIDsTextarea').value.trim();
+            
+            if (!authTokensText || !senderIDsText) {
+                alert('Please enter both JWT tokens and sender IDs');
+                return;
+            }
+            
+            const authTokens = authTokensText.split('\n').filter(line => line.trim() !== '');
+            const senderIDs = senderIDsText.split('\n').filter(line => line.trim() !== '');
+            
+            if (authTokens.length !== senderIDs.length) {
+                alert('Number of JWT tokens must match number of sender IDs');
+                return;
+            }
+            
+            // Get other parameters
+            const maxBrews = parseInt(document.getElementById('maxBrews').value) || 10;
+            const operationDelay = parseInt(document.getElementById('operationDelay').value) || 3400;
+            const brewingPlanId = document.getElementById('brewingPlanId').value || '3202';
+            const silvercoins = parseInt(document.getElementById('silvercoins').value) || 5000;
+            const minMintNumber = parseInt(document.getElementById('minMintNumber').value) || 30;
+            
+            // Clear previous session
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+            
+            document.getElementById('resultContainer').innerHTML = '';
+            document.getElementById('scanResults').innerHTML = '<p>No scan results yet. Starting brewing...</p>';
+            
+            // Disable/enable buttons
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('pauseButton').disabled = false;
+            document.getElementById('stopButton').disabled = false;
+            document.getElementById('proceedButton').disabled = true;
+            document.getElementById('resumeButton').disabled = true;
+            
+            addLogToContainer('Starting brewing session...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/brewing/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        authTokens,
+                        senderIDs,
+                        maxBrews,
+                        operationDelay,
+                        brewingPlanId,
+                        silvercoins,
+                        minMintNumber,
+                        requirementsConfig: REQUIREMENTS_CONFIG
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = data.sessionId;
+                    document.getElementById('sessionIdDisplay').textContent = currentSessionId;
+                    addLogToContainer(`Session started with ID: ${currentSessionId}`, 'success');
+                    
+                    // Start polling for status
+                    statusInterval = setInterval(() => pollSessionStatus(currentSessionId), 2000);
+                } else {
+                    throw new Error(data.error || 'Failed to start session');
+                }
+            } catch (error) {
+                addLogToContainer(`Error starting session: ${error.message}`, 'error');
+                resetButtons();
+            }
+        }
+        
+        // Poll session status
+        async function pollSessionStatus(sessionId) {
+            try {
+                const response = await fetch(`${API_URL}/api/brewing/status/${sessionId}`);
+                const data = await response.json();
+                
+                // Update stats
+                updateStats(data);
+                
+                // Update logs if there are new ones
+                if (data.logs && data.logs.length > 0) {
+                    updateLogs(data.logs);
+                }
+                
+                // Check if session is complete
+                if (data.status === 'completed' || data.status === 'error' || data.status === 'stopped') {
+                    clearInterval(statusInterval);
+                    resetButtons();
+                    
+                    if (data.status === 'completed') {
+                        addLogToContainer('Session completed!', 'success');
+                    } else if (data.status === 'error') {
+                        addLogToContainer('Session ended with error', 'error');
+                    } else if (data.status === 'stopped') {
+                        addLogToContainer('Session stopped by user', 'warning');
+                    }
+                }
+                
+                // Handle pause state
+                if (data.pauseRequested) {
+                    document.getElementById('pauseButton').disabled = true;
+                    document.getElementById('resumeButton').disabled = false;
+                } else {
+                    document.getElementById('pauseButton').disabled = false;
+                    document.getElementById('resumeButton').disabled = true;
+                }
+                
+                // Handle scan complete
+                if (data.scanComplete) {
+                    document.getElementById('proceedButton').disabled = false;
+                }
+                
+            } catch (error) {
+                console.error('Error polling status:', error);
+            }
+        }
+        
+        // Update logs
+        function updateLogs(newLogs) {
+            const container = document.getElementById('resultContainer');
+            const existingMessages = new Set();
+            
+            // Get existing messages
+            container.querySelectorAll('.log-entry').forEach(entry => {
+                existingMessages.add(entry.textContent);
+            });
+            
+            // Add new logs
+            newLogs.forEach(log => {
+                const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                const logText = `[${timestamp}] ${log.message}`;
+                
+                if (!existingMessages.has(logText)) {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry log-${log.type}`;
+                    logEntry.textContent = logText;
+                    container.appendChild(logEntry);
+                    existingMessages.add(logText);
+                }
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Pause session
+        async function pauseSession() {
+            if (!currentSessionId) return;
+            
+            try {
+                await fetch(`${API_URL}/api/brewing/pause/${currentSessionId}`, {
+                    method: 'POST'
+                });
+                addLogToContainer('Pause requested', 'warning');
+            } catch (error) {
+                addLogToContainer(`Error pausing: ${error.message}`, 'error');
+            }
+        }
+        
+        // Resume session
+        async function resumeSession() {
+            if (!currentSessionId) return;
+            
+            try {
+                await fetch(`${API_URL}/api/brewing/resume/${currentSessionId}`, {
+                    method: 'POST'
+                });
+                addLogToContainer('Resumed', 'success');
+            } catch (error) {
+                addLogToContainer(`Error resuming: ${error.message}`, 'error');
+            }
+        }
+        
+        // Stop session
+        async function stopSession() {
+            if (!currentSessionId) return;
+            
+            try {
+                await fetch(`${API_URL}/api/brewing/stop/${currentSessionId}`, {
+                    method: 'POST'
+                });
+                addLogToContainer('Stop requested', 'warning');
+            } catch (error) {
+                addLogToContainer(`Error stopping: ${error.message}`, 'error');
+            }
+        }
+        
+        // Proceed after scan
+        async function proceedAfterScan() {
+            if (!currentSessionId) return;
+            
+            try {
+                await fetch(`${API_URL}/api/brewing/proceed/${currentSessionId}`, {
+                    method: 'POST'
+                });
+                document.getElementById('proceedButton').disabled = true;
+                addLogToContainer('Proceeding to brewing...', 'success');
+            } catch (error) {
+                addLogToContainer(`Error proceeding: ${error.message}`, 'error');
+            }
+        }
+        
+        // New session
+        function newSession() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+            
+            currentSessionId = null;
+            document.getElementById('sessionIdDisplay').textContent = 'Not started';
+            document.getElementById('resultContainer').innerHTML = '';
+            document.getElementById('scanResults').innerHTML = '<p>No scan results yet. Start brewing to scan collections.</p>';
+            
+            resetButtons();
+            
+            // Reset stats
+            document.getElementById('totalCards').textContent = '0';
+            document.getElementById('totalBrews').textContent = '0';
+            document.getElementById('completedBrews').textContent = '0';
+            document.getElementById('successRate').textContent = '0%';
+            document.getElementById('accountsProcessed').textContent = '0';
+            document.getElementById('brewsCompleted').textContent = '0';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+        
+        // Reset buttons
+        function resetButtons() {
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('resumeButton').disabled = true;
+            document.getElementById('stopButton').disabled = true;
+            document.getElementById('proceedButton').disabled = true;
+        }
+    </script>
 </body>
 </html>
