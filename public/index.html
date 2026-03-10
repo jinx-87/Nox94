@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Requirement Card Brewer</title>
+    <title>Multi-Requirement Card Crafter</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -17,7 +17,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-        .input-section, .results-section, .control-section {
+        .input-section, .results-section {
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -26,20 +26,10 @@
         .results-section {
             grid-column: 1 / -1;
         }
-        .control-section {
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-        }
         h2 {
             color: #333;
-            border-bottom: 2px solid #8B4513;
+            border-bottom: 2px solid #4CAF50;
             padding-bottom: 10px;
-            margin-top: 0;
-        }
-        h3 {
-            color: #8B4513;
             margin-top: 0;
         }
         .input-group {
@@ -51,7 +41,7 @@
             font-weight: bold;
             color: #555;
         }
-        textarea, input, select {
+        textarea, input {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -60,7 +50,7 @@
             box-sizing: border-box;
         }
         textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
             font-family: monospace;
         }
@@ -68,7 +58,6 @@
             display: flex;
             gap: 10px;
             margin: 20px 0;
-            flex-wrap: wrap;
         }
         button {
             padding: 12px 24px;
@@ -77,27 +66,12 @@
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.3s;
-            min-width: 120px;
         }
         #startButton {
-            background-color: #8B4513;
-            color: white;
-        }
-        #startButton:hover:not(:disabled) {
-            background-color: #6b3410;
-        }
-        #pauseButton {
-            background-color: #FFA500;
-            color: white;
-        }
-        #pauseButton:hover:not(:disabled) {
-            background-color: #cc8400;
-        }
-        #resumeButton {
             background-color: #4CAF50;
             color: white;
         }
-        #resumeButton:hover:not(:disabled) {
+        #startButton:hover:not(:disabled) {
             background-color: #45a049;
         }
         #stopButton {
@@ -107,19 +81,12 @@
         #stopButton:hover:not(:disabled) {
             background-color: #d32f2f;
         }
-        #proceedButton {
+        #downloadButton {
             background-color: #2196F3;
             color: white;
         }
-        #proceedButton:hover:not(:disabled) {
+        #downloadButton:hover {
             background-color: #1976D2;
-        }
-        #newSessionButton {
-            background-color: #9C27B0;
-            color: white;
-        }
-        #newSessionButton:hover {
-            background-color: #7B1FA2;
         }
         button:disabled {
             background-color: #cccccc;
@@ -134,7 +101,7 @@
         }
         .progress-bar {
             height: 20px;
-            background-color: #8B4513;
+            background-color: #4CAF50;
             border-radius: 10px;
             width: 0%;
             transition: width 0.3s ease;
@@ -150,7 +117,7 @@
             padding: 15px;
             border-radius: 6px;
             text-align: center;
-            border-left: 4px solid #8B4513;
+            border-left: 4px solid #4CAF50;
         }
         .stat-value {
             font-size: 24px;
@@ -168,61 +135,41 @@
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
             background-color: #fafafa;
-            font-family: 'Courier New', monospace;
+            font-family: monospace;
             font-size: 13px;
         }
-        .log-entry {
-            margin: 2px 0;
-            padding: 2px 5px;
-            border-bottom: 1px solid #eee;
+        .account-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #f0f8ff;
         }
-        .log-success {
+        .account-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .account-section p {
+            margin: 5px 0;
+            padding: 5px;
+            line-height: 1.4;
+        }
+        .success {
             color: #2ecc71;
-            font-weight: bold;
         }
-        .log-error {
+        .error {
             color: #e74c3c;
-            font-weight: bold;
         }
-        .log-warning {
+        .warning {
             color: #f39c12;
-            font-weight: bold;
         }
-        .log-info {
+        .info {
             color: #3498db;
-        }
-        .log-account {
-            color: #8B4513;
-            font-weight: bold;
-            font-size: 14px;
-            background-color: #f0e6dd;
-            padding: 5px;
-            margin: 10px 0 5px 0;
-        }
-        .log-brew-header {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        .log-highlight {
-            color: #8B4513;
-            font-weight: bold;
-            background-color: #fff3e0;
-            padding: 5px;
-            border-left: 4px solid #8B4513;
-        }
-        .log-summary-header {
-            color: #8B4513;
-            font-weight: bold;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .log-small-font {
-            font-size: 11px;
-            color: #666;
-            margin-left: 20px;
         }
         .collection-info {
             display: grid;
@@ -231,63 +178,23 @@
             margin: 15px 0;
         }
         .collection-item {
-            background: #f0e6dd;
+            background: #e8f4f8;
             padding: 10px;
             border-radius: 4px;
             font-size: 12px;
-            border-left: 4px solid #8B4513;
         }
-        .session-info {
-            background: #f0e6dd;
+        .funds-info {
+            background: #e8f8f0;
             padding: 15px;
             border-radius: 6px;
             margin: 15px 0;
+            border-left: 4px solid #27ae60;
         }
-        .session-id {
-            font-family: monospace;
-            font-size: 14px;
-            color: #8B4513;
-            background: #fff;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        .scan-results-box {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #2196F3;
-        }
-        .warning-box {
-            background: #fff3e0;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #f39c12;
-        }
-        .filter-group {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-        }
-        .inline-input {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .inline-input label {
-            width: auto;
-            margin-bottom: 0;
-        }
-        .inline-input input {
-            width: 100px;
+        .funds-info p {
+            margin: 8px 0;
         }
         @media (max-width: 768px) {
             .container {
-                grid-template-columns: 1fr;
-            }
-            .control-section {
                 grid-template-columns: 1fr;
             }
             .stats {
@@ -297,7 +204,7 @@
     </style>
 </head>
 <body>
-    <h1>🍺 Multi-Requirement Card Brewer</h1>
+    <h1>Multi-Requirement Card Crafter</h1>
     
     <div class="container">
         <div class="input-section">
@@ -313,18 +220,9 @@
                 <textarea id="senderIDsTextarea" placeholder="Paste sender IDs here, one per line"></textarea>
             </div>
             
-            <div class="filter-group">
-                <h3>Card Filters</h3>
-                <div class="input-group">
-                    <label for="minMintNumber">Minimum Mint Number:</label>
-                    <input type="number" id="minMintNumber" value="30" min="1" placeholder="Only use cards with mint >= this value">
-                </div>
-                <div class="input-group">
-                    <label>Status Filter:</label>
-                    <div style="color: #666; font-size: 12px; margin-top: 5px;">
-                        Only cards with status "available" will be used
-                    </div>
-                </div>
+            <div class="input-group">
+                <label for="maxCrafts">Max Crafts per Account:</label>
+                <input type="number" id="maxCrafts" value="10" min="1" max="100">
             </div>
             
             <div class="stats">
@@ -333,11 +231,11 @@
                     <div class="stat-label">Total Cards</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value" id="totalBrews">0</div>
-                    <div class="stat-label">Total Brews</div>
+                    <div class="stat-value" id="totalCrafts">0</div>
+                    <div class="stat-label">Total Crafts</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value" id="completedBrews">0</div>
+                    <div class="stat-value" id="completedCrafts">0</div>
                     <div class="stat-label">Completed</div>
                 </div>
                 <div class="stat-box">
@@ -345,13 +243,23 @@
                     <div class="stat-label">Success Rate</div>
                 </div>
             </div>
+            
+            <div class="button-group">
+                <button id="startButton">Start Crafting</button>
+                <button id="stopButton" disabled>Stop</button>
+                <button id="downloadButton">Download Results</button>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
         </div>
         
         <div class="input-section">
-            <h2>Brewing Configuration</h2>
+            <h2>Crafting Configuration</h2>
             
             <div class="input-group">
-                <label>Brewing Plan Requirements:</label>
+                <label>Crafting Plan Requirements:</label>
                 <div class="collection-info">
                     <div class="collection-item">
                         <strong>Requirement 3235 (16 cards):</strong><br>
@@ -369,64 +277,18 @@
             </div>
             
             <div class="input-group">
-                <label for="maxBrews">Max Brews per Account:</label>
-                <input type="number" id="maxBrews" value="10" min="1" max="100">
-            </div>
-            
-            <div class="input-group">
                 <label for="operationDelay">Operation Delay (ms):</label>
                 <input type="number" id="operationDelay" value="3400" min="1000" max="30000">
             </div>
             
             <div class="input-group">
-                <label for="brewingPlanId">Brewing Plan ID:</label>
-                <input type="text" id="brewingPlanId" value="3202">
+                <label for="craftingPlanId">Crafting Plan ID:</label>
+                <input type="text" id="craftingPlanId" value="3202">
             </div>
             
             <div class="input-group">
-                <label for="silvercoins">Silver Coins per Brew:</label>
+                <label for="silvercoins">Silver Coins per Craft:</label>
                 <input type="number" id="silvercoins" value="5000" min="0">
-            </div>
-        </div>
-    </div>
-    
-    <div class="control-section">
-        <div class="session-info">
-            <h3>Session Control</h3>
-            <div class="button-group">
-                <button id="startButton">Start Brewing</button>
-                <button id="pauseButton" disabled>Pause</button>
-                <button id="resumeButton" disabled>Resume</button>
-                <button id="stopButton" disabled>Stop</button>
-                <button id="newSessionButton">New Session</button>
-            </div>
-            <div>
-                <strong>Session ID:</strong> <span id="sessionIdDisplay" class="session-id">Not started</span>
-            </div>
-        </div>
-        
-        <div class="session-info">
-            <h3>Scan Results</h3>
-            <div id="scanResults" class="scan-results-box">
-                <p>No scan results yet. Start brewing to scan collections.</p>
-            </div>
-            <button id="proceedButton" disabled>Proceed to Brew</button>
-        </div>
-        
-        <div class="session-info">
-            <h3>Progress</h3>
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="stats" style="margin-top: 10px;">
-                <div class="stat-box">
-                    <div class="stat-value" id="accountsProcessed">0</div>
-                    <div class="stat-label">Accounts</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="brewsCompleted">0</div>
-                    <div class="stat-label">Brews Done</div>
-                </div>
             </div>
         </div>
     </div>
@@ -438,89 +300,169 @@
 
     <script>
         // Configuration
-        const API_URL = window.location.origin;
-        let currentSessionId = null;
-        let statusInterval = null;
+        const DEFAULT_OPERATION_DELAY = 3400;
         
         // Collections mapping for each requirement
         const REQUIREMENTS_CONFIG = {
             3235: {
                 collectionIds: [17920, 17921, 17922],
-                cardsPerBrew: 16
+                cardsPerCraft: 16
             },
             3236: {
                 collectionIds: [17923, 17924, 17925],
-                cardsPerBrew: 8
+                cardsPerCraft: 8
             },
             3237: {
                 collectionIds: [17953, 17986, 17987],
-                cardsPerBrew: 4
+                cardsPerCraft: 4
             }
         };
         
+        // State variables
+        let stopProcess = false;
+        let accountPairs = [];
+        let currentAccountIndex = 0;
+        let totalCrafts = 0;
+        let completedCrafts = 0;
+        let successfulCrafts = 0;
+        let totalCardsCollected = 0;
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('startButton').addEventListener('click', startBrewing);
-            document.getElementById('pauseButton').addEventListener('click', pauseSession);
-            document.getElementById('resumeButton').addEventListener('click', resumeSession);
-            document.getElementById('stopButton').addEventListener('click', stopSession);
-            document.getElementById('proceedButton').addEventListener('click', proceedAfterScan);
-            document.getElementById('newSessionButton').addEventListener('click', newSession);
+            document.getElementById('startButton').addEventListener('click', startProcessing);
+            document.getElementById('stopButton').addEventListener('click', stopScript);
+            document.getElementById('downloadButton').addEventListener('click', downloadResults);
         });
         
-        // Function to add log message to container
-        function addLogToContainer(message, type = 'info') {
+        // Function to add result message
+        function addToResultContainer(message, className = '') {
             const container = document.getElementById('resultContainer');
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry log-${type}`;
-            
-            // Format timestamp
-            const timestamp = new Date().toLocaleTimeString();
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            
-            container.appendChild(logEntry);
+            const paragraph = document.createElement('p');
+            paragraph.textContent = message;
+            if (className) {
+                paragraph.className = className;
+            }
+            container.appendChild(paragraph);
             container.scrollTop = container.scrollHeight;
+            return paragraph;
+        }
+        
+        // Function to create account section
+        function createAccountSection(accountNumber, senderID) {
+            const container = document.getElementById('resultContainer');
+            const section = document.createElement('div');
+            section.className = 'account-section';
+            section.id = `account-${accountNumber}`;
+            section.innerHTML = `<h3>Account ${accountNumber} (Sender: ${senderID})</h3>`;
+            container.appendChild(section);
+            return section;
         }
         
         // Function to update stats
-        function updateStats(sessionData) {
-            document.getElementById('totalCards').textContent = sessionData.totalCardsCollected || 0;
-            document.getElementById('totalBrews').textContent = sessionData.totalBrews || 0;
-            document.getElementById('completedBrews').textContent = sessionData.completedBrews || 0;
-            const successRate = sessionData.totalBrews > 0 ? 
-                Math.round((sessionData.successfulBrews / sessionData.totalBrews) * 100) : 0;
+        function updateStats() {
+            document.getElementById('totalCards').textContent = totalCardsCollected;
+            document.getElementById('totalCrafts').textContent = totalCrafts;
+            document.getElementById('completedCrafts').textContent = completedCrafts;
+            const successRate = totalCrafts > 0 ? Math.round((successfulCrafts / totalCrafts) * 100) : 0;
             document.getElementById('successRate').textContent = `${successRate}%`;
+        }
+        
+        // Function to download results
+        function downloadResults() {
+            const container = document.getElementById('resultContainer');
+            const text = container.innerText;
             
-            document.getElementById('accountsProcessed').textContent = sessionData.accountsProcessed || 0;
-            document.getElementById('brewsCompleted').textContent = sessionData.completedBrews || 0;
-            document.getElementById('progressBar').style.width = `${sessionData.progress || 0}%`;
+            const currentDate = new Date();
+            const formattedDate = `${currentDate.getFullYear()}.${(currentDate.getMonth()+1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}_${currentDate.getHours().toString().padStart(2, '0')}h${currentDate.getMinutes().toString().padStart(2, '0')}`;
             
-            // Update scan results if available
-            if (sessionData.scanResults) {
-                updateScanResults(sessionData.scanResults);
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `crafting_results_${formattedDate}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Proxy request function - ONLY sends endpoint, not full URL
+        async function sendProxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
+            try {
+                const response = await fetch('/proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        endpoint: endpoint,
+                        method: method,
+                        headers: headers,
+                        data: data,
+                    }),
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Proxy request failed:', error);
+                throw error;
             }
         }
         
-        // Update scan results display
-        function updateScanResults(results) {
-            const scanDiv = document.getElementById('scanResults');
-            scanDiv.innerHTML = `
-                <p><strong>Account ${results.accountNumber}</strong> (Sender: ${results.senderID})</p>
-                <p>📊 Based on cards: ${results.cardBasedBatches} brews possible</p>
-                <p>💰 Based on funds: ${results.fundBasedBatches} brews possible (Balance: ${results.silverBalance.toLocaleString()} silver)</p>
-                <p class="warning-box" style="margin:10px 0; padding:10px;">
-                    ⚠️ Lowest mint that will be used: <strong>${results.lowestMintUsed}</strong>
-                </p>
-                <p>Total available cards: ${results.totalCards}</p>
-            `;
-            document.getElementById('proceedButton').disabled = false;
+        // Helper function for delays
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
         
-        // Start brewing session
-        async function startBrewing() {
+        // Function to check user funds
+        async function checkUserFunds(authToken) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'x-user-jwt': authToken
+            };
+            
+            const endpoint = '/user/funds';
+            
+            try {
+                const response = await sendProxyRequest(endpoint, 'GET', headers);
+                
+                if (response?.success && response?.data?.silvercoins !== undefined) {
+                    return response.data.silvercoins;
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error checking user funds:', error);
+                throw error;
+            }
+        }
+        
+        // Main processing function
+        async function startProcessing() {
+            if (stopProcess) return;
+            
+            // Reset state
+            stopProcess = false;
+            currentAccountIndex = 0;
+            totalCrafts = 0;
+            completedCrafts = 0;
+            successfulCrafts = 0;
+            totalCardsCollected = 0;
+            
+            document.getElementById('resultContainer').innerHTML = '';
+            document.getElementById('stopButton').disabled = false;
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('progressBar').style.width = '0%';
+            
             // Get inputs
             const authTokensText = document.getElementById('authTokensTextarea').value.trim();
             const senderIDsText = document.getElementById('senderIDsTextarea').value.trim();
+            const maxCrafts = parseInt(document.getElementById('maxCrafts').value) || 10;
             
             if (!authTokensText || !senderIDsText) {
                 alert('Please enter both JWT tokens and sender IDs');
@@ -535,227 +477,459 @@
                 return;
             }
             
-            // Get other parameters
-            const maxBrews = parseInt(document.getElementById('maxBrews').value) || 10;
-            const operationDelay = parseInt(document.getElementById('operationDelay').value) || 3400;
-            const brewingPlanId = document.getElementById('brewingPlanId').value || '3202';
-            const silvercoins = parseInt(document.getElementById('silvercoins').value) || 5000;
-            const minMintNumber = parseInt(document.getElementById('minMintNumber').value) || 30;
+            accountPairs = authTokens.map((token, index) => ({
+                token: token.trim(),
+                senderID: senderIDs[index].trim()
+            }));
             
-            // Clear previous session
-            if (statusInterval) {
-                clearInterval(statusInterval);
+            if (accountPairs.length === 0) {
+                alert('No valid account pairs found');
+                return;
             }
             
-            document.getElementById('resultContainer').innerHTML = '';
-            document.getElementById('scanResults').innerHTML = '<p>No scan results yet. Starting brewing...</p>';
+            addToResultContainer(`Found ${accountPairs.length} account(s) to process`);
+            addToResultContainer(`Maximum crafts per account: ${maxCrafts}`);
+            updateStats();
             
-            // Disable/enable buttons
-            document.getElementById('startButton').disabled = true;
-            document.getElementById('pauseButton').disabled = false;
-            document.getElementById('stopButton').disabled = false;
-            document.getElementById('proceedButton').disabled = true;
-            document.getElementById('resumeButton').disabled = true;
-            
-            addLogToContainer('Starting brewing session...', 'info');
-            
-            try {
-                const response = await fetch(`${API_URL}/api/brewing/start`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        authTokens,
-                        senderIDs,
-                        maxBrews,
-                        operationDelay,
-                        brewingPlanId,
-                        silvercoins,
-                        minMintNumber,
-                        requirementsConfig: REQUIREMENTS_CONFIG
-                    })
-                });
+            // Process each account
+            for (currentAccountIndex = 0; currentAccountIndex < accountPairs.length; currentAccountIndex++) {
+                if (stopProcess) break;
                 
-                const data = await response.json();
+                const pair = accountPairs[currentAccountIndex];
+                await processAccount(pair.token, pair.senderID, maxCrafts);
                 
-                if (data.success) {
-                    currentSessionId = data.sessionId;
-                    document.getElementById('sessionIdDisplay').textContent = currentSessionId;
-                    addLogToContainer(`Session started with ID: ${currentSessionId}`, 'success');
-                    
-                    // Start polling for status
-                    statusInterval = setInterval(() => pollSessionStatus(currentSessionId), 2000);
-                } else {
-                    throw new Error(data.error || 'Failed to start session');
+                // Update progress
+                const progress = ((currentAccountIndex + 1) / accountPairs.length) * 100;
+                document.getElementById('progressBar').style.width = `${progress}%`;
+                
+                // Delay between accounts
+                if (currentAccountIndex < accountPairs.length - 1) {
+                    const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
+                    await delay(delayTime);
                 }
-            } catch (error) {
-                addLogToContainer(`Error starting session: ${error.message}`, 'error');
-                resetButtons();
             }
+            
+            if (!stopProcess) {
+                addToResultContainer('All accounts processed!', 'success');
+            }
+            
+            document.getElementById('stopButton').disabled = true;
+            document.getElementById('startButton').disabled = false;
         }
         
-        // Poll session status
-        async function pollSessionStatus(sessionId) {
+        // Process a single account
+        async function processAccount(authToken, senderID, maxCrafts) {
+            const accountNumber = currentAccountIndex + 1;
+            const accountSection = createAccountSection(accountNumber, senderID);
+            
             try {
-                const response = await fetch(`${API_URL}/api/brewing/status/${sessionId}`);
-                const data = await response.json();
+                accountSection.innerHTML += `<p class="info">Starting processing for account ${accountNumber}</p>`;
                 
-                // Update stats
-                updateStats(data);
+                // Step 1: Collect cards for each requirement
+                accountSection.innerHTML += `<p class="info">Collecting cards from required collections...</p>`;
                 
-                // Update logs if there are new ones
-                if (data.logs && data.logs.length > 0) {
-                    updateLogs(data.logs);
+                // Store cards by requirement - we'll use these as our pool
+                const cardsByRequirement = {};
+                
+                for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
+                    if (stopProcess) return;
+                    
+                    accountSection.innerHTML += `<p>Collecting cards for requirement ${requirementId} (${config.cardsPerCraft} cards per craft)...</p>`;
+                    
+                    const cards = [];
+                    for (const collectionId of config.collectionIds) {
+                        if (stopProcess) return;
+                        
+                        const collectionCards = await getCollectionCards(authToken, senderID, collectionId);
+                        
+                        // Log the first card to see its structure
+                        if (collectionCards.length > 0) {
+                            console.log(`Sample card from collection ${collectionId}:`, collectionCards[0]);
+                        }
+                        
+                        cards.push(...collectionCards);
+                        
+                        accountSection.innerHTML += `<p>  - Collection ${collectionId}: ${collectionCards.length} cards</p>`;
+                        
+                        // Small delay between collection requests
+                        await delay(1000);
+                    }
+                    
+                    cardsByRequirement[requirementId] = cards;
+                    totalCardsCollected += cards.length;
+                    
+                    accountSection.innerHTML += `<p class="success">Total for requirement ${requirementId}: ${cards.length} cards</p>`;
                 }
                 
-                // Check if session is complete
-                if (data.status === 'completed' || data.status === 'error' || data.status === 'stopped') {
-                    clearInterval(statusInterval);
-                    resetButtons();
+                updateStats();
+                
+                // Step 2: Check if we have enough cards for crafting
+                const cardBasedBatches = calculateCraftableBatches(cardsByRequirement, maxCrafts);
+                
+                if (cardBasedBatches === 0) {
+                    accountSection.innerHTML += `<p class="error">Not enough cards for any crafting operations</p>`;
+                    return;
+                }
+                
+                accountSection.innerHTML += `<p class="success">Based on cards: Can perform ${cardBasedBatches} crafting operation(s)</p>`;
+                
+                // Step 3: Check user funds
+                accountSection.innerHTML += `<p class="info">Checking account funds...</p>`;
+                
+                let silverBalance = 0;
+                try {
+                    silverBalance = await checkUserFunds(authToken);
+                    const formattedSilver = silverBalance.toLocaleString();
+                    accountSection.innerHTML += `<p class="success">Current silver balance: ${formattedSilver}</p>`;
                     
-                    if (data.status === 'completed') {
-                        addLogToContainer('Session completed!', 'success');
-                    } else if (data.status === 'error') {
-                        addLogToContainer('Session ended with error', 'error');
-                    } else if (data.status === 'stopped') {
-                        addLogToContainer('Session stopped by user', 'warning');
+                    const silverPerCraft = parseInt(document.getElementById('silvercoins').value) || 5000;
+                    const fundBasedBatches = Math.floor(silverBalance / silverPerCraft);
+                    
+                    accountSection.innerHTML += `<p>Crafting costs ${silverPerCraft.toLocaleString()} silver per operation</p>`;
+                    accountSection.innerHTML += `<p>Based on funds: Can afford ${fundBasedBatches} crafting operation(s)</p>`;
+                    
+                    const fundsInfo = document.createElement('div');
+                    fundsInfo.className = 'funds-info';
+                    fundsInfo.innerHTML = `
+                        <p><strong>Funds Summary:</strong></p>
+                        <p>Silver Balance: ${formattedSilver}</p>
+                        <p>Cost per Craft: ${silverPerCraft.toLocaleString()}</p>
+                        <p>Affordable Crafts: ${fundBasedBatches}</p>
+                    `;
+                    accountSection.appendChild(fundsInfo);
+                    
+                    let actualBatches = Math.min(cardBasedBatches, fundBasedBatches);
+                    
+                    if (actualBatches === 0) {
+                        if (fundBasedBatches === 0) {
+                            accountSection.innerHTML += `<p class="error">Insufficient funds for any crafting operations</p>`;
+                        } else {
+                            accountSection.innerHTML += `<p class="error">No crafts possible due to card/fund limitations</p>`;
+                        }
+                        return;
+                    }
+                    
+                    actualBatches = Math.min(actualBatches, maxCrafts);
+                    
+                    accountSection.innerHTML += `<p class="success"><strong>Will perform ${actualBatches} crafting operation(s) (limited by ${actualBatches === fundBasedBatches ? 'funds' : 'cards'})</strong></p>`;
+                    
+                    const initialSilver = silverBalance;
+                    
+                    // Keep track of used cards to prevent reuse
+                    const usedCardIds = new Set();
+                    
+                    // Step 4: Process each crafting batch
+                    for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
+                        if (stopProcess) break;
+                        
+                        accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches}</strong></p>`;
+                        
+                        // Check funds before each craft (except the first)
+                        if (batchNum > 1) {
+                            try {
+                                const currentSilver = await checkUserFunds(authToken);
+                                if (currentSilver < silverPerCraft) {
+                                    accountSection.innerHTML += `<p class="error">Insufficient funds for next craft (balance: ${currentSilver.toLocaleString()})</p>`;
+                                    break;
+                                }
+                            } catch (fundsError) {
+                                accountSection.innerHTML += `<p class="warning">Could not verify funds before craft ${batchNum}</p>`;
+                            }
+                        }
+                        
+                        // Process the craft with proper card tracking
+                        const craftResult = await processCraft(
+                            authToken, 
+                            senderID, 
+                            cardsByRequirement, 
+                            usedCardIds,
+                            batchNum, 
+                            accountSection
+                        );
+                        
+                        if (craftResult) {
+                            successfulCrafts++;
+                        } else {
+                            // If craft failed, we should stop or continue based on error type
+                            accountSection.innerHTML += `<p class="warning">Craft ${batchNum} failed, but continuing with next...</p>`;
+                        }
+                        
+                        completedCrafts++;
+                        totalCrafts++;
+                        updateStats();
+                        
+                        // Update progress
+                        const accountProgress = (batchNum / actualBatches) * 100;
+                        const totalProgress = ((currentAccountIndex * 100) + accountProgress) / accountPairs.length;
+                        document.getElementById('progressBar').style.width = `${totalProgress}%`;
+                        
+                        // Delay between crafts
+                        if (batchNum < actualBatches) {
+                            const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
+                            await delay(delayTime);
+                        }
+                    }
+                    
+                    // Check final funds
+                    try {
+                        const finalSilver = await checkUserFunds(authToken);
+                        const formattedFinalSilver = finalSilver.toLocaleString();
+                        const silverSpent = initialSilver - finalSilver;
+                        
+                        accountSection.innerHTML += `<p class="info">Final silver balance: ${formattedFinalSilver}</p>`;
+                        accountSection.innerHTML += `<p class="info">Total silver spent: ${silverSpent.toLocaleString()}</p>`;
+                    } catch (fundsError) {
+                        accountSection.innerHTML += `<p class="warning">Could not check final funds</p>`;
+                    }
+                    
+                } catch (fundsError) {
+                    accountSection.innerHTML += `<p class="error">Failed to check funds: ${fundsError.message}</p>`;
+                    accountSection.innerHTML += `<p class="warning">Proceeding with card-based crafts only (${cardBasedBatches} crafts)</p>`;
+                    
+                    const actualBatches = Math.min(cardBasedBatches, maxCrafts);
+                    
+                    // Keep track of used cards to prevent reuse
+                    const usedCardIds = new Set();
+                    
+                    for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
+                        if (stopProcess) break;
+                        
+                        accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches} (funds check failed, proceeding anyway)</strong></p>`;
+                        
+                        const craftResult = await processCraft(
+                            authToken, 
+                            senderID, 
+                            cardsByRequirement, 
+                            usedCardIds,
+                            batchNum, 
+                            accountSection
+                        );
+                        
+                        if (craftResult) {
+                            successfulCrafts++;
+                        }
+                        
+                        completedCrafts++;
+                        totalCrafts++;
+                        updateStats();
+                        
+                        const accountProgress = (batchNum / actualBatches) * 100;
+                        const totalProgress = ((currentAccountIndex * 100) + accountProgress) / accountPairs.length;
+                        document.getElementById('progressBar').style.width = `${totalProgress}%`;
+                        
+                        if (batchNum < actualBatches) {
+                            const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
+                            await delay(delayTime);
+                        }
                     }
                 }
                 
-                // Handle pause state
-                if (data.pauseRequested) {
-                    document.getElementById('pauseButton').disabled = true;
-                    document.getElementById('resumeButton').disabled = false;
-                } else {
-                    document.getElementById('pauseButton').disabled = false;
-                    document.getElementById('resumeButton').disabled = true;
-                }
-                
-                // Handle scan complete
-                if (data.scanComplete) {
-                    document.getElementById('proceedButton').disabled = false;
-                }
+                accountSection.innerHTML += `<p class="success">Account ${accountNumber} processing completed!</p>`;
                 
             } catch (error) {
-                console.error('Error polling status:', error);
+                accountSection.innerHTML += `<p class="error">Error processing account: ${error.message}</p>`;
+                console.error('Account processing error:', error);
             }
         }
         
-        // Update logs
-        function updateLogs(newLogs) {
-            const container = document.getElementById('resultContainer');
-            const existingMessages = new Set();
+        // Calculate how many crafts we can perform based on cards
+        function calculateCraftableBatches(cardsByRequirement, maxCrafts) {
+            let maxPossibleCrafts = maxCrafts;
             
-            // Get existing messages
-            container.querySelectorAll('.log-entry').forEach(entry => {
-                existingMessages.add(entry.textContent);
-            });
-            
-            // Add new logs
-            newLogs.forEach(log => {
-                const timestamp = new Date(log.timestamp).toLocaleTimeString();
-                const logText = `[${timestamp}] ${log.message}`;
+            for (const [requirementId, cards] of Object.entries(cardsByRequirement)) {
+                const cardsNeededPerCraft = REQUIREMENTS_CONFIG[requirementId].cardsPerCraft;
+                const possibleCraftsForRequirement = Math.floor(cards.length / cardsNeededPerCraft);
                 
-                if (!existingMessages.has(logText)) {
-                    const logEntry = document.createElement('div');
-                    logEntry.className = `log-entry log-${log.type}`;
-                    logEntry.textContent = logText;
-                    container.appendChild(logEntry);
-                    existingMessages.add(logText);
+                if (possibleCraftsForRequirement < maxPossibleCrafts) {
+                    maxPossibleCrafts = possibleCraftsForRequirement;
                 }
-            });
+            }
             
-            container.scrollTop = container.scrollHeight;
+            return maxPossibleCrafts;
         }
         
-        // Pause session
-        async function pauseSession() {
-            if (!currentSessionId) return;
+        // Get cards from a collection
+        async function getCollectionCards(authToken, senderID, collectionId) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'x-user-jwt': authToken
+            };
+            
+            const endpoint = `/collections/${collectionId}/users/${senderID}/owned2`;
             
             try {
-                await fetch(`${API_URL}/api/brewing/pause/${currentSessionId}`, {
-                    method: 'POST'
-                });
-                addLogToContainer('Pause requested', 'warning');
+                const response = await sendProxyRequest(endpoint, 'GET', headers);
+                
+                // Handle different response structures
+                if (response?.data?.cards) {
+                    return response.data.cards;
+                } else if (Array.isArray(response?.data)) {
+                    return response.data;
+                } else if (Array.isArray(response)) {
+                    return response;
+                }
+                
+                return [];
             } catch (error) {
-                addLogToContainer(`Error pausing: ${error.message}`, 'error');
+                console.error(`Error fetching cards for collection ${collectionId}:`, error);
+                throw error;
             }
         }
         
-        // Resume session
-        async function resumeSession() {
-            if (!currentSessionId) return;
+        // Process a single craft
+        async function processCraft(authToken, senderID, cardsByRequirement, usedCardIds, batchNumber, accountSection) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'x-user-jwt': authToken
+            };
+            
+            const craftingPlanId = document.getElementById('craftingPlanId').value || '3202';
+            const silvercoins = parseInt(document.getElementById('silvercoins').value) || 5000;
+            
+            const endpoint = `/crafting/plans/${craftingPlanId}`;
+            
+            // Build requirements array using cards that haven't been used yet
+            const requirements = [];
+            const cardsUsedInThisCraft = [];
+            
+            for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
+                const cardsNeeded = config.cardsPerCraft;
+                
+                // Get all cards for this requirement
+                const allCards = cardsByRequirement[requirementId] || [];
+                
+                // Filter out cards that have already been used
+                const availableCards = allCards.filter(card => !usedCardIds.has(card.id));
+                
+                if (availableCards.length < cardsNeeded) {
+                    throw new Error(`Not enough unused cards for requirement ${requirementId}. Need ${cardsNeeded}, have ${availableCards.length}`);
+                }
+                
+                // Take the first N unused cards
+                const selectedCards = availableCards.slice(0, cardsNeeded);
+                
+                // Mark these cards as used
+                selectedCards.forEach(card => {
+                    usedCardIds.add(card.id);
+                    cardsUsedInThisCraft.push({
+                        id: card.id,
+                        requirementId: requirementId
+                    });
+                });
+                
+                requirements.push({
+                    requirementId: parseInt(requirementId),
+                    entityIds: selectedCards.map(card => card.id)
+                });
+            }
+            
+            const craftingBody = {
+                requirements: requirements,
+                silvercoins: silvercoins
+            };
+            
+            accountSection.innerHTML += `<p>Sending crafting request for batch ${batchNumber}...</p>`;
+            accountSection.innerHTML += `<p>Using card IDs: ${cardsUsedInThisCraft.map(c => c.id).join(', ')}</p>`;
             
             try {
-                await fetch(`${API_URL}/api/brewing/resume/${currentSessionId}`, {
-                    method: 'POST'
-                });
-                addLogToContainer('Resumed', 'success');
+                const responseCraft = await sendProxyRequest(endpoint, 'POST', headers, craftingBody);
+                
+                if (!responseCraft.success) {
+                    // If crafting fails, we should "unuse" the cards
+                    cardsUsedInThisCraft.forEach(card => usedCardIds.delete(card.id));
+                    throw new Error(`Crafting failed: ${JSON.stringify(responseCraft.error || responseCraft)}`);
+                }
+                
+                accountSection.innerHTML += `<p class="success">Crafting request successful!</p>`;
+                
+                // Process slots from the response
+                const slots = responseCraft.data?.slots || [];
+                
+                if (!slots || slots.length === 0) {
+                    accountSection.innerHTML += `<p class="warning">No slots found in response</p>`;
+                    return true;
+                }
+                
+                accountSection.innerHTML += `<p>Found ${slots.length} slots to open</p>`;
+                
+                // Log all slot IDs for debugging
+                accountSection.innerHTML += `<p>Slot IDs: ${slots.map(s => s.id).join(', ')}</p>`;
+                
+                // Open each slot
+                for (let i = 0; i < slots.length; i++) {
+                    if (stopProcess) break;
+                    
+                    const slotId = slots[i].id;
+                    accountSection.innerHTML += `<p>Opening slot ${i + 1} (ID: ${slotId})...</p>`;
+                    
+                    try {
+                        const slotResult = await openSlot(authToken, slotId);
+                        
+                        if (slotResult && slotResult.success) {
+                            if (slotResult.data?.cards?.length > 0) {
+                                const card = slotResult.data.cards[0];
+                                const cardInfo = `${card.type || 'Unknown'} ${card.mintBatch || ''}${card.mintNumber || ''}`.trim();
+                                accountSection.innerHTML += `<p class="success">Slot ${i + 1}: Got ${cardInfo} with rating ${card.rating || 'N/A'}</p>`;
+                            } else {
+                                accountSection.innerHTML += `<p class="success">Slot ${i + 1} opened successfully</p>`;
+                            }
+                        } else {
+                            throw new Error(`Slot open failed: ${JSON.stringify(slotResult)}`);
+                        }
+                        
+                        // Delay between slot openings (but not after the last one)
+                        if (i < slots.length - 1) {
+                            await delay(2000);
+                        }
+                        
+                    } catch (error) {
+                        accountSection.innerHTML += `<p class="error">Error opening slot ${i + 1}: ${error.message}</p>`;
+                        
+                        // If this is the last slot and it failed, we still consider the craft partially successful
+                        if (i === slots.length - 1) {
+                            accountSection.innerHTML += `<p class="warning">Last slot failed, but craft completed</p>`;
+                        }
+                    }
+                }
+                
+                accountSection.innerHTML += `<p class="success">Craft ${batchNumber} completed successfully!</p>`;
+                return true;
+                
             } catch (error) {
-                addLogToContainer(`Error resuming: ${error.message}`, 'error');
+                accountSection.innerHTML += `<p class="error">Error in craft ${batchNumber}: ${error.message}</p>`;
+                return false;
             }
         }
         
-        // Stop session
-        async function stopSession() {
-            if (!currentSessionId) return;
+        // Open a slot
+        async function openSlot(authToken, slotId) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'x-user-jwt': authToken
+            };
+            
+            const endpoint = `/crafting/slots/${slotId}/open-instant`;
             
             try {
-                await fetch(`${API_URL}/api/brewing/stop/${currentSessionId}`, {
-                    method: 'POST'
-                });
-                addLogToContainer('Stop requested', 'warning');
+                const response = await sendProxyRequest(endpoint, 'POST', headers);
+                
+                if (!response.success) {
+                    throw new Error(`Slot open failed: ${JSON.stringify(response.error || response)}`);
+                }
+                
+                return response;
             } catch (error) {
-                addLogToContainer(`Error stopping: ${error.message}`, 'error');
+                console.error(`Error opening slot ${slotId}:`, error);
+                throw error;
             }
         }
         
-        // Proceed after scan
-        async function proceedAfterScan() {
-            if (!currentSessionId) return;
-            
-            try {
-                await fetch(`${API_URL}/api/brewing/proceed/${currentSessionId}`, {
-                    method: 'POST'
-                });
-                document.getElementById('proceedButton').disabled = true;
-                addLogToContainer('Proceeding to brewing...', 'success');
-            } catch (error) {
-                addLogToContainer(`Error proceeding: ${error.message}`, 'error');
-            }
-        }
-        
-        // New session
-        function newSession() {
-            if (statusInterval) {
-                clearInterval(statusInterval);
-            }
-            
-            currentSessionId = null;
-            document.getElementById('sessionIdDisplay').textContent = 'Not started';
-            document.getElementById('resultContainer').innerHTML = '';
-            document.getElementById('scanResults').innerHTML = '<p>No scan results yet. Start brewing to scan collections.</p>';
-            
-            resetButtons();
-            
-            // Reset stats
-            document.getElementById('totalCards').textContent = '0';
-            document.getElementById('totalBrews').textContent = '0';
-            document.getElementById('completedBrews').textContent = '0';
-            document.getElementById('successRate').textContent = '0%';
-            document.getElementById('accountsProcessed').textContent = '0';
-            document.getElementById('brewsCompleted').textContent = '0';
-            document.getElementById('progressBar').style.width = '0%';
-        }
-        
-        // Reset buttons
-        function resetButtons() {
-            document.getElementById('startButton').disabled = false;
-            document.getElementById('pauseButton').disabled = true;
-            document.getElementById('resumeButton').disabled = true;
+        // Stop the script
+        function stopScript() {
+            stopProcess = true;
             document.getElementById('stopButton').disabled = true;
-            document.getElementById('proceedButton').disabled = true;
+            document.getElementById('startButton').disabled = false;
+            addToResultContainer('Process stopped by user', 'warning');
         }
     </script>
 </body>
