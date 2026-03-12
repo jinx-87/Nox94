@@ -71,6 +71,11 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Redirect root to crafter
+app.get('/', (req, res) => {
+    res.redirect('/crafter');
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`API Base: ${API_BASE}`);
