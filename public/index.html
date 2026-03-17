@@ -1,936 +1,567 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Requirement Card Crafter</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .input-section, .results-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .results-section {
-            grid-column: 1 / -1;
-        }
-        h2 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .input-group {
-            margin: 15px 0;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-        textarea, input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-            font-family: monospace;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        #startButton {
-            background-color: #4CAF50;
-            color: white;
-        }
-        #startButton:hover:not(:disabled) {
-            background-color: #45a049;
-        }
-        #stopButton {
-            background-color: #f44336;
-            color: white;
-        }
-        #stopButton:hover:not(:disabled) {
-            background-color: #d32f2f;
-        }
-        #downloadButton {
-            background-color: #2196F3;
-            color: white;
-        }
-        #downloadButton:hover {
-            background-color: #1976D2;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .progress-container {
-            margin: 20px 0;
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 20px;
-            background-color: #4CAF50;
-            border-radius: 10px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .stat-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            border-left: 4px solid #4CAF50;
-        }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            margin-top: 5px;
-        }
-        #resultContainer {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            max-height: 600px;
-            overflow-y: auto;
-            background-color: #fafafa;
-            font-family: monospace;
-            font-size: 13px;
-        }
-        .account-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            background-color: #f0f8ff;
-        }
-        .account-section h3 {
-            margin-top: 0;
-            color: #2c3e50;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-        .account-section p {
-            margin: 5px 0;
-            padding: 5px;
-            line-height: 1.4;
-        }
-        .success {
-            color: #2ecc71;
-        }
-        .error {
-            color: #e74c3c;
-        }
-        .warning {
-            color: #f39c12;
-        }
-        .info {
-            color: #3498db;
-        }
-        .collection-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .collection-item {
-            background: #e8f4f8;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .funds-info {
-            background: #e8f8f0;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #27ae60;
-        }
-        .funds-info p {
-            margin: 8px 0;
-        }
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Spin Bot Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --muted: #6b7280;
+      --text: #1f2937;
+      --accent: #2563eb;
+      --good: #059669;
+      --warn: #d97706;
+      --bad: #dc2626;
+      --chip: #e5e7eb;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    h1 { margin: 0; font-size: 24px; font-weight: 600; }
+    .accent { color: var(--accent); }
+    .wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .card { 
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px; 
+      overflow: hidden; 
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .card h2 { 
+      font-size: 16px; 
+      font-weight: 600;
+      margin: 0; 
+      padding: 16px 20px; 
+      border-bottom: 1px solid var(--border); 
+      background: #f9fafb;
+    }
+    .section { padding: 20px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .btn {
+      background: white; 
+      border: 1px solid var(--border); 
+      color: var(--text);
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      transition: all .15s;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .btn:hover { 
+      border-color: var(--accent); 
+      color: var(--accent);
+      background: #f8fafc;
+    }
+    .btn.small { padding: 4px 10px; font-size: 12px; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.primary:hover { background: #1d4ed8; }
+    .btn.success { background: var(--good); border-color: var(--good); color: white; }
+    .btn.warning { background: var(--warn); border-color: var(--warn); color: white; }
+    .btn.danger { background: var(--bad); border-color: var(--bad); color: white; }
+    .btn.info { background: #6b7280; border-color: #6b7280; color: white; }
+    .user-card {
+      background: #f9fafb; 
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      padding: 16px; 
+      margin-bottom: 12px;
+    }
+    .user-head { display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+    .user-head h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--accent); }
+    .user-nick {
+      font-size: 14px;
+      color: var(--muted);
+      margin-left: 4px;
+      font-weight: normal;
+    }
+    .kv { 
+      display: grid; 
+      grid-template-columns: 140px 1fr 140px 1fr; 
+      gap: 12px 16px; 
+      margin: 12px 0; 
+      font-size: 13px; 
+    }
+    .muted { color: var(--muted); }
+    .ok { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .jwt-token {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 8px;
+      color: #4b5563;
+      background: #f3f4f6;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+      width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin: 8px 0;
+      user-select: all;
+    }
+    pre.logs {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      white-space: pre-wrap; 
+      background: #f8fafc; 
+      border: 1px solid var(--border);
+      padding: 16px; 
+      border-radius: 8px; 
+      max-height: 400px; 
+      overflow: auto; 
+      font-size: 12px;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--panel);
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--chip);
+      border-radius: 2px;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .settings-panel {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      min-width: 80px;
+    }
+    .input-group input {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      width: 100px;
+      font-size: 14px;
+    }
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-idle { background: #e5e7eb; color: #374151; }
+    .badge-refreshing { background: #fef3c7; color: #92400e; }
+    .badge-claiming { background: #ede9fe; color: #5b21b6; }
+    .badge-checking { background: #dbeafe; color: #1e40af; }
+    .badge-spinning { background: #cffafe; color: #155e75; }
+    .badge-ready { background: #d1fae5; color: #065f46; }
+    .badge-completed { background: #9ca3af; color: #1f2937; }
+    .badge-error { background: #fee2e2; color: #991b1b; }
+    .funds-diff {
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    .positive { color: var(--good); }
+    .negative { color: var(--bad); }
+  </style>
 </head>
 <body>
-    <h1>Multi-Requirement Card Crafter</h1>
-    
-    <div class="container">
-        <div class="input-section">
-            <h2>Account Configuration</h2>
-            
-            <div class="input-group">
-                <label for="authTokensTextarea">JWT Tokens (one per line):</label>
-                <textarea id="authTokensTextarea" placeholder="Paste JWT tokens here, one per line"></textarea>
-            </div>
-            
-            <div class="input-group">
-                <label for="senderIDsTextarea">Sender IDs (one per line):</label>
-                <textarea id="senderIDsTextarea" placeholder="Paste sender IDs here, one per line"></textarea>
-            </div>
-            
-            <div class="input-group">
-                <label for="maxCrafts">Max Crafts per Account:</label>
-                <input type="number" id="maxCrafts" value="10" min="1" max="100">
-            </div>
-            
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-value" id="totalCards">0</div>
-                    <div class="stat-label">Total Cards</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="totalCrafts">0</div>
-                    <div class="stat-label">Total Crafts</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="completedCrafts">0</div>
-                    <div class="stat-label">Completed</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="successRate">0%</div>
-                    <div class="stat-label">Success Rate</div>
-                </div>
-            </div>
-            
-            <div class="button-group">
-                <button id="startButton">Start Crafting</button>
-                <button id="stopButton" disabled>Stop</button>
-                <button id="downloadButton">Download Results</button>
-            </div>
-            
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-        </div>
-        
-        <div class="input-section">
-            <h2>Crafting Configuration</h2>
-            
-            <div class="input-group">
-                <label>Crafting Plan Requirements:</label>
-                <div class="collection-info">
-                    <div class="collection-item">
-                        <strong>Requirement 3235 (16 cards):</strong><br>
-                        Collections: 17920, 17921, 17922
-                    </div>
-                    <div class="collection-item">
-                        <strong>Requirement 3236 (8 cards):</strong><br>
-                        Collections: 17923, 17924, 17925
-                    </div>
-                    <div class="collection-item">
-                        <strong>Requirement 3237 (4 cards):</strong><br>
-                        Collections: 17953, 17986, 17987
-                    </div>
-                </div>
-            </div>
-            
-            <div class="input-group">
-                <label for="operationDelay">Operation Delay (ms):</label>
-                <input type="number" id="operationDelay" value="3400" min="1000" max="30000">
-            </div>
-            
-            <div class="input-group">
-                <label for="craftingPlanId">Crafting Plan ID:</label>
-                <input type="text" id="craftingPlanId" value="3202">
-            </div>
-            
-            <div class="input-group">
-                <label for="silvercoins">Silver Coins per Craft:</label>
-                <input type="number" id="silvercoins" value="5000" min="0">
-            </div>
-        </div>
+  <header>
+    <h1>Spin Bot <span class="accent">Dashboard</span></h1>
+    <div class="row">
+      <button class="btn" id="refreshAll">🔄 Refresh</button>
+      <button class="btn info" id="checkAllFunds">💰 Check All Funds</button>
     </div>
-    
-    <div class="results-section">
-        <h2>Results & Logs</h2>
-        <div id="resultContainer"></div>
+  </header>
+
+  <div class="wrap">
+    <!-- System Stats -->
+    <div class="stats-grid" id="systemStats">
+      <div class="stat-card">
+        <div class="stat-value" id="totalUsers">0</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="activeCount">0</div>
+        <div class="stat-label">Active in Pool</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="queueLength">0</div>
+        <div class="stat-label">In Queue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalSpins">0</div>
+        <div class="stat-label">Total Spins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalPacks">0</div>
+        <div class="stat-label">Total Packs</div>
+      </div>
     </div>
 
-    <script>
-        // Configuration
-        const DEFAULT_OPERATION_DELAY = 3400;
+    <!-- Control Panel -->
+    <div class="card">
+      <h2>Control Panel</h2>
+      <div class="section">
+        <div class="settings-panel">
+          <div class="input-group">
+            <label>Max Concurrent:</label>
+            <input type="number" id="maxConcurrent" min="1" max="50" value="17">
+          </div>
+          <div class="input-group">
+            <label>Spin Delay (s):</label>
+            <input type="number" id="spinDelay" min="1" max="30" step="0.1" value="2.5">
+          </div>
+          <div class="input-group">
+            <label>Min Funds:</label>
+            <input type="number" id="minFunds" min="1000" max="1000000" step="1000" value="200000">
+          </div>
+          <button class="btn success" id="startButton">▶️ Start</button>
+          <button class="btn warning" id="pauseButton">⏸️ Pause</button>
+          <button class="btn danger" id="resetButton">🔄 Reset Stats</button>
+        </div>
+        <div class="row" style="margin-top: 16px;">
+          <span class="status-badge" id="systemStatus">System Ready</span>
+          <span class="muted" id="statusDetail"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Panel -->
+    <div class="card">
+      <h2>Users</h2>
+      <div class="section" id="usersPanel">
+        <div class="muted">Loading users...</div>
+      </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="card">
+      <h2>Activity Logs</h2>
+      <div class="section">
+        <div class="row" style="margin-bottom:16px; justify-content:space-between;">
+          <button class="btn small" id="refreshLogs">Refresh Logs</button>
+          <span class="muted">Showing latest events</span>
+        </div>
+        <pre class="logs" id="logsBox">Loading logs...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let systemState = {
+      isPaused: false,
+      settings: {
+        maxConcurrent: 17,
+        spinDelay: 2.5,
+        minFundsThreshold: 200000
+      },
+      activeCount: 0,
+      queueLength: 0,
+      totalUsers: 0
+    };
+
+    let autoRefresh = true;
+    let lastScrollPosition = 0;
+
+    // API Functions
+    async function fetchUsers() {
+      const r = await fetch('/api/users');
+      if (!r.ok) throw new Error('Failed to fetch users');
+      return r.json();
+    }
+
+    async function fetchDebugLogs(limit = 100) {
+      const r = await fetch(`/api/debug-logs?limit=${limit}`);
+      if (!r.ok) throw new Error('Failed to fetch logs');
+      return r.json();
+    }
+
+    async function fetchSystemState() {
+      const r = await fetch('/api/system-state');
+      if (!r.ok) throw new Error('Failed to fetch system state');
+      return r.json();
+    }
+
+    async function sendCommand(endpoint, body = {}) {
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return r.json();
+    }
+
+    // Render Functions
+    function renderUsers(users) {
+      const panel = document.getElementById('usersPanel');
+      const userIds = Object.keys(users).sort();
+      
+      if (!userIds.length) {
+        panel.innerHTML = '<div class="muted">No users loaded.</div>';
+        return;
+      }
+
+      // Calculate totals
+      const totals = {
+        totalSpins: userIds.reduce((sum, id) => sum + (users[id].totalSpinsRun || 0), 0),
+        totalPacks: userIds.reduce((sum, id) => sum + (users[id].totalPacksOpened || 0), 0)
+      };
+
+      document.getElementById('totalSpins').textContent = totals.totalSpins;
+      document.getElementById('totalPacks').textContent = totals.totalPacks;
+
+      const parts = [];
+
+      userIds.forEach((id) => {
+        const u = users[id];
+        const statusClass = `badge-${u.status || 'idle'}`;
+        const progressPercent = u.spinsRemaining ? ((u.spinsDoneInRound || 0) / ((u.spinsDoneInRound || 0) + u.spinsRemaining) * 100) : 0;
         
-        // Collections mapping for each requirement
-        const REQUIREMENTS_CONFIG = {
-            3235: {
-                collectionIds: [17920, 17921, 17922],
-                cardsPerCraft: 16
-            },
-            3236: {
-                collectionIds: [17923, 17924, 17925],
-                cardsPerCraft: 8
-            },
-            3237: {
-                collectionIds: [17953, 17986, 17987],
-                cardsPerCraft: 4
-            }
-        };
+        // Calculate funds difference
+        const fundsDiff = u.currentFunds - u.initialFunds;
+        const diffClass = fundsDiff > 0 ? 'positive' : (fundsDiff < 0 ? 'negative' : '');
+        const diffSign = fundsDiff > 0 ? '+' : '';
         
-        // State variables
-        let stopProcess = false;
-        let accountPairs = [];
-        let currentAccountIndex = 0;
-        let totalCrafts = 0;
-        let completedCrafts = 0;
-        let successfulCrafts = 0;
-        let totalCardsCollected = 0;
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('startButton').addEventListener('click', startProcessing);
-            document.getElementById('stopButton').addEventListener('click', stopScript);
-            document.getElementById('downloadButton').addEventListener('click', downloadResults);
+        parts.push(`
+          <div class="user-card">
+            <div class="user-head">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3>${id} <span class="user-nick">${u.nick || ''}</span></h3>
+                <span class="status-badge ${statusClass}">${u.status || 'idle'}</span>
+              </div>
+              <div class="row">
+                <button class="btn small" data-act="refresh" data-id="${id}">🔄 Refresh Token</button>
+                <button class="btn small" data-act="check-funds" data-id="${id}">💰 Check Funds</button>
+              </div>
+            </div>
+            
+            <!-- Full JWT token for copying -->
+            <div class="jwt-token" title="Select all to copy">
+              ${u.jwtToken || 'No token'}
+            </div>
+            
+            <div class="kv">
+              <span class="muted">Status</span>
+              <span>${u.isActive ? '✅ Active' : '❌ Inactive'}</span>
+              <span class="muted">Spins (Total/Round)</span>
+              <span>${u.totalSpinsRun || 0} / ${u.spinsDoneInRound || 0} of ${(u.spinsDoneInRound || 0) + (u.spinsRemaining || 0)}</span>
+              
+              <span class="muted">Initial Funds</span>
+              <span>${(u.initialFunds || 0).toLocaleString()}</span>
+              <span class="muted">Current Funds</span>
+              <span>
+                ${(u.currentFunds || 0).toLocaleString()}
+                <span class="funds-diff ${diffClass}">(${diffSign}${fundsDiff.toLocaleString()})</span>
+              </span>
+              
+              <span class="muted">Packs Opened</span>
+              <span>${u.totalPacksOpened || 0}</span>
+              <span class="muted">Achievements</span>
+              <span>${u.achievementsClaimed || 0}</span>
+              
+              <span class="muted">Last Error</span>
+              <span class="${u.lastError ? 'bad' : 'muted'}">${u.lastError || 'None'}</span>
+            </div>
+            
+            ${(u.spinsRemaining || 0) > 0 ? `
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progressPercent}%"></div>
+            </div>
+            ` : ''}
+            
+            ${u.startTime ? `
+            <div style="margin-top:8px; font-size:11px; color:var(--muted);">
+              Started: ${new Date(u.startTime).toLocaleTimeString()}
+              ${u.endTime ? ` · Completed: ${new Date(u.endTime).toLocaleTimeString()}` : ''}
+            </div>
+            ` : ''}
+          </div>
+        `);
+      });
+
+      panel.innerHTML = parts.join('\n');
+      
+      // Add event listeners
+      panel.querySelectorAll('button[data-act="refresh"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          try {
+            await sendCommand(`/api/user/${id}/refresh`);
+            await loadAll();
+          } catch (err) {
+            alert(err.message);
+          }
         });
+      });
+      
+      panel.querySelectorAll('button[data-act="check-funds"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          try {
+            await sendCommand(`/api/user/${id}/check-funds`);
+            await loadAll();
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+      });
+    }
+
+    function renderLogs(logs) {
+      const box = document.getElementById('logsBox');
+      if (!logs || !logs.length) {
+        box.textContent = 'No logs yet.';
+        return;
+      }
+      
+      // Save scroll position
+      lastScrollPosition = box.scrollTop;
+      
+      const lines = logs.map(entry => {
+        const time = entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '';
+        return `[${time}] [${entry.type || 'INFO'}] ${entry.userId}: ${entry.message}`;
+      });
+      
+      box.textContent = lines.join('\n');
+      
+      // Restore scroll position
+      box.scrollTop = lastScrollPosition;
+    }
+
+    function updateSystemStats(state) {
+      document.getElementById('totalUsers').textContent = state.totalUsers || 0;
+      document.getElementById('activeCount').textContent = state.activeCount || 0;
+      document.getElementById('queueLength').textContent = state.queueLength || 0;
+      
+      const systemStatus = document.getElementById('systemStatus');
+      systemStatus.textContent = state.isPaused ? '⏸️ PAUSED' : (state.activeCount > 0 ? '▶️ RUNNING' : '⏹️ STOPPED');
+      systemStatus.className = `status-badge ${state.isPaused ? 'badge-warning' : (state.activeCount > 0 ? 'badge-spinning' : 'badge-idle')}`;
+      
+      document.getElementById('statusDetail').textContent = 
+        `Max: ${state.settings.maxConcurrent}, Delay: ${state.settings.spinDelay}s, Min: ${state.settings.minFundsThreshold}`;
+    }
+
+    // Load Functions
+    async function loadAll() {
+      try {
+        const [users, logs, state] = await Promise.all([
+          fetchUsers(),
+          fetchDebugLogs(100),
+          fetchSystemState()
+        ]);
         
-        // Function to add result message
-        function addToResultContainer(message, className = '') {
-            const container = document.getElementById('resultContainer');
-            const paragraph = document.createElement('p');
-            paragraph.textContent = message;
-            if (className) {
-                paragraph.className = className;
-            }
-            container.appendChild(paragraph);
-            container.scrollTop = container.scrollHeight;
-            return paragraph;
-        }
-        
-        // Function to create account section
-        function createAccountSection(accountNumber, senderID) {
-            const container = document.getElementById('resultContainer');
-            const section = document.createElement('div');
-            section.className = 'account-section';
-            section.id = `account-${accountNumber}`;
-            section.innerHTML = `<h3>Account ${accountNumber} (Sender: ${senderID})</h3>`;
-            container.appendChild(section);
-            return section;
-        }
-        
-        // Function to update stats
-        function updateStats() {
-            document.getElementById('totalCards').textContent = totalCardsCollected;
-            document.getElementById('totalCrafts').textContent = totalCrafts;
-            document.getElementById('completedCrafts').textContent = completedCrafts;
-            const successRate = totalCrafts > 0 ? Math.round((successfulCrafts / totalCrafts) * 100) : 0;
-            document.getElementById('successRate').textContent = `${successRate}%`;
-        }
-        
-        // Function to download results
-        function downloadResults() {
-            const container = document.getElementById('resultContainer');
-            const text = container.innerText;
-            
-            const currentDate = new Date();
-            const formattedDate = `${currentDate.getFullYear()}.${(currentDate.getMonth()+1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}_${currentDate.getHours().toString().padStart(2, '0')}h${currentDate.getMinutes().toString().padStart(2, '0')}`;
-            
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `crafting_results_${formattedDate}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-        
-        // Proxy request function - ONLY sends endpoint, not full URL
-        async function sendProxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
-            try {
-                const response = await fetch('/proxy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        endpoint: endpoint,
-                        method: method,
-                        headers: headers,
-                        data: data,
-                    }),
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('Proxy request failed:', error);
-                throw error;
-            }
-        }
-        
-        // Helper function for delays
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-        
-        // Function to check user funds
-        async function checkUserFunds(authToken) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'x-user-jwt': authToken
-            };
-            
-            const endpoint = '/user/funds';
-            
-            try {
-                const response = await sendProxyRequest(endpoint, 'GET', headers);
-                
-                if (response?.success && response?.data?.silvercoins !== undefined) {
-                    return response.data.silvercoins;
-                } else {
-                    throw new Error('Invalid response format');
-                }
-            } catch (error) {
-                console.error('Error checking user funds:', error);
-                throw error;
-            }
-        }
-        
-        // Main processing function
-        async function startProcessing() {
-            if (stopProcess) return;
-            
-            // Reset state
-            stopProcess = false;
-            currentAccountIndex = 0;
-            totalCrafts = 0;
-            completedCrafts = 0;
-            successfulCrafts = 0;
-            totalCardsCollected = 0;
-            
-            document.getElementById('resultContainer').innerHTML = '';
-            document.getElementById('stopButton').disabled = false;
-            document.getElementById('startButton').disabled = true;
-            document.getElementById('progressBar').style.width = '0%';
-            
-            // Get inputs
-            const authTokensText = document.getElementById('authTokensTextarea').value.trim();
-            const senderIDsText = document.getElementById('senderIDsTextarea').value.trim();
-            const maxCrafts = parseInt(document.getElementById('maxCrafts').value) || 10;
-            
-            if (!authTokensText || !senderIDsText) {
-                alert('Please enter both JWT tokens and sender IDs');
-                return;
-            }
-            
-            const authTokens = authTokensText.split('\n').filter(line => line.trim() !== '');
-            const senderIDs = senderIDsText.split('\n').filter(line => line.trim() !== '');
-            
-            if (authTokens.length !== senderIDs.length) {
-                alert('Number of JWT tokens must match number of sender IDs');
-                return;
-            }
-            
-            accountPairs = authTokens.map((token, index) => ({
-                token: token.trim(),
-                senderID: senderIDs[index].trim()
-            }));
-            
-            if (accountPairs.length === 0) {
-                alert('No valid account pairs found');
-                return;
-            }
-            
-            addToResultContainer(`Found ${accountPairs.length} account(s) to process`);
-            addToResultContainer(`Maximum crafts per account: ${maxCrafts}`);
-            updateStats();
-            
-            // Process each account
-            for (currentAccountIndex = 0; currentAccountIndex < accountPairs.length; currentAccountIndex++) {
-                if (stopProcess) break;
-                
-                const pair = accountPairs[currentAccountIndex];
-                await processAccount(pair.token, pair.senderID, maxCrafts);
-                
-                // Update progress
-                const progress = ((currentAccountIndex + 1) / accountPairs.length) * 100;
-                document.getElementById('progressBar').style.width = `${progress}%`;
-                
-                // Delay between accounts
-                if (currentAccountIndex < accountPairs.length - 1) {
-                    const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
-                    await delay(delayTime);
-                }
-            }
-            
-            if (!stopProcess) {
-                addToResultContainer('All accounts processed!', 'success');
-            }
-            
-            document.getElementById('stopButton').disabled = true;
-            document.getElementById('startButton').disabled = false;
-        }
-        
-        // Process a single account
-        async function processAccount(authToken, senderID, maxCrafts) {
-            const accountNumber = currentAccountIndex + 1;
-            const accountSection = createAccountSection(accountNumber, senderID);
-            
-            try {
-                accountSection.innerHTML += `<p class="info">Starting processing for account ${accountNumber}</p>`;
-                
-                // Step 1: Collect cards for each requirement
-                accountSection.innerHTML += `<p class="info">Collecting cards from required collections...</p>`;
-                
-                // Store cards by requirement - we'll use these as our pool
-                const cardsByRequirement = {};
-                
-                for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
-                    if (stopProcess) return;
-                    
-                    accountSection.innerHTML += `<p>Collecting cards for requirement ${requirementId} (${config.cardsPerCraft} cards per craft)...</p>`;
-                    
-                    const cards = [];
-                    for (const collectionId of config.collectionIds) {
-                        if (stopProcess) return;
-                        
-                        const collectionCards = await getCollectionCards(authToken, senderID, collectionId);
-                        
-                        // Log the first card to see its structure
-                        if (collectionCards.length > 0) {
-                            console.log(`Sample card from collection ${collectionId}:`, collectionCards[0]);
-                        }
-                        
-                        cards.push(...collectionCards);
-                        
-                        accountSection.innerHTML += `<p>  - Collection ${collectionId}: ${collectionCards.length} cards</p>`;
-                        
-                        // Small delay between collection requests
-                        await delay(1000);
-                    }
-                    
-                    cardsByRequirement[requirementId] = cards;
-                    totalCardsCollected += cards.length;
-                    
-                    accountSection.innerHTML += `<p class="success">Total for requirement ${requirementId}: ${cards.length} cards</p>`;
-                }
-                
-                updateStats();
-                
-                // Step 2: Check if we have enough cards for crafting
-                const cardBasedBatches = calculateCraftableBatches(cardsByRequirement, maxCrafts);
-                
-                if (cardBasedBatches === 0) {
-                    accountSection.innerHTML += `<p class="error">Not enough cards for any crafting operations</p>`;
-                    return;
-                }
-                
-                accountSection.innerHTML += `<p class="success">Based on cards: Can perform ${cardBasedBatches} crafting operation(s)</p>`;
-                
-                // Step 3: Check user funds
-                accountSection.innerHTML += `<p class="info">Checking account funds...</p>`;
-                
-                let silverBalance = 0;
-                try {
-                    silverBalance = await checkUserFunds(authToken);
-                    const formattedSilver = silverBalance.toLocaleString();
-                    accountSection.innerHTML += `<p class="success">Current silver balance: ${formattedSilver}</p>`;
-                    
-                    const silverPerCraft = parseInt(document.getElementById('silvercoins').value) || 5000;
-                    const fundBasedBatches = Math.floor(silverBalance / silverPerCraft);
-                    
-                    accountSection.innerHTML += `<p>Crafting costs ${silverPerCraft.toLocaleString()} silver per operation</p>`;
-                    accountSection.innerHTML += `<p>Based on funds: Can afford ${fundBasedBatches} crafting operation(s)</p>`;
-                    
-                    const fundsInfo = document.createElement('div');
-                    fundsInfo.className = 'funds-info';
-                    fundsInfo.innerHTML = `
-                        <p><strong>Funds Summary:</strong></p>
-                        <p>Silver Balance: ${formattedSilver}</p>
-                        <p>Cost per Craft: ${silverPerCraft.toLocaleString()}</p>
-                        <p>Affordable Crafts: ${fundBasedBatches}</p>
-                    `;
-                    accountSection.appendChild(fundsInfo);
-                    
-                    let actualBatches = Math.min(cardBasedBatches, fundBasedBatches);
-                    
-                    if (actualBatches === 0) {
-                        if (fundBasedBatches === 0) {
-                            accountSection.innerHTML += `<p class="error">Insufficient funds for any crafting operations</p>`;
-                        } else {
-                            accountSection.innerHTML += `<p class="error">No crafts possible due to card/fund limitations</p>`;
-                        }
-                        return;
-                    }
-                    
-                    actualBatches = Math.min(actualBatches, maxCrafts);
-                    
-                    accountSection.innerHTML += `<p class="success"><strong>Will perform ${actualBatches} crafting operation(s) (limited by ${actualBatches === fundBasedBatches ? 'funds' : 'cards'})</strong></p>`;
-                    
-                    const initialSilver = silverBalance;
-                    
-                    // Keep track of used cards to prevent reuse
-                    const usedCardIds = new Set();
-                    
-                    // Step 4: Process each crafting batch
-                    for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
-                        if (stopProcess) break;
-                        
-                        accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches}</strong></p>`;
-                        
-                        // Check funds before each craft (except the first)
-                        if (batchNum > 1) {
-                            try {
-                                const currentSilver = await checkUserFunds(authToken);
-                                if (currentSilver < silverPerCraft) {
-                                    accountSection.innerHTML += `<p class="error">Insufficient funds for next craft (balance: ${currentSilver.toLocaleString()})</p>`;
-                                    break;
-                                }
-                            } catch (fundsError) {
-                                accountSection.innerHTML += `<p class="warning">Could not verify funds before craft ${batchNum}</p>`;
-                            }
-                        }
-                        
-                        // Process the craft with proper card tracking
-                        const craftResult = await processCraft(
-                            authToken, 
-                            senderID, 
-                            cardsByRequirement, 
-                            usedCardIds,
-                            batchNum, 
-                            accountSection
-                        );
-                        
-                        if (craftResult) {
-                            successfulCrafts++;
-                        } else {
-                            // If craft failed, we should stop or continue based on error type
-                            accountSection.innerHTML += `<p class="warning">Craft ${batchNum} failed, but continuing with next...</p>`;
-                        }
-                        
-                        completedCrafts++;
-                        totalCrafts++;
-                        updateStats();
-                        
-                        // Update progress
-                        const accountProgress = (batchNum / actualBatches) * 100;
-                        const totalProgress = ((currentAccountIndex * 100) + accountProgress) / accountPairs.length;
-                        document.getElementById('progressBar').style.width = `${totalProgress}%`;
-                        
-                        // Delay between crafts
-                        if (batchNum < actualBatches) {
-                            const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
-                            await delay(delayTime);
-                        }
-                    }
-                    
-                    // Check final funds
-                    try {
-                        const finalSilver = await checkUserFunds(authToken);
-                        const formattedFinalSilver = finalSilver.toLocaleString();
-                        const silverSpent = initialSilver - finalSilver;
-                        
-                        accountSection.innerHTML += `<p class="info">Final silver balance: ${formattedFinalSilver}</p>`;
-                        accountSection.innerHTML += `<p class="info">Total silver spent: ${silverSpent.toLocaleString()}</p>`;
-                    } catch (fundsError) {
-                        accountSection.innerHTML += `<p class="warning">Could not check final funds</p>`;
-                    }
-                    
-                } catch (fundsError) {
-                    accountSection.innerHTML += `<p class="error">Failed to check funds: ${fundsError.message}</p>`;
-                    accountSection.innerHTML += `<p class="warning">Proceeding with card-based crafts only (${cardBasedBatches} crafts)</p>`;
-                    
-                    const actualBatches = Math.min(cardBasedBatches, maxCrafts);
-                    
-                    // Keep track of used cards to prevent reuse
-                    const usedCardIds = new Set();
-                    
-                    for (let batchNum = 1; batchNum <= actualBatches; batchNum++) {
-                        if (stopProcess) break;
-                        
-                        accountSection.innerHTML += `<p class="info"><strong>Processing craft ${batchNum}/${actualBatches} (funds check failed, proceeding anyway)</strong></p>`;
-                        
-                        const craftResult = await processCraft(
-                            authToken, 
-                            senderID, 
-                            cardsByRequirement, 
-                            usedCardIds,
-                            batchNum, 
-                            accountSection
-                        );
-                        
-                        if (craftResult) {
-                            successfulCrafts++;
-                        }
-                        
-                        completedCrafts++;
-                        totalCrafts++;
-                        updateStats();
-                        
-                        const accountProgress = (batchNum / actualBatches) * 100;
-                        const totalProgress = ((currentAccountIndex * 100) + accountProgress) / accountPairs.length;
-                        document.getElementById('progressBar').style.width = `${totalProgress}%`;
-                        
-                        if (batchNum < actualBatches) {
-                            const delayTime = parseInt(document.getElementById('operationDelay').value) || DEFAULT_OPERATION_DELAY;
-                            await delay(delayTime);
-                        }
-                    }
-                }
-                
-                accountSection.innerHTML += `<p class="success">Account ${accountNumber} processing completed!</p>`;
-                
-            } catch (error) {
-                accountSection.innerHTML += `<p class="error">Error processing account: ${error.message}</p>`;
-                console.error('Account processing error:', error);
-            }
-        }
-        
-        // Calculate how many crafts we can perform based on cards
-        function calculateCraftableBatches(cardsByRequirement, maxCrafts) {
-            let maxPossibleCrafts = maxCrafts;
-            
-            for (const [requirementId, cards] of Object.entries(cardsByRequirement)) {
-                const cardsNeededPerCraft = REQUIREMENTS_CONFIG[requirementId].cardsPerCraft;
-                const possibleCraftsForRequirement = Math.floor(cards.length / cardsNeededPerCraft);
-                
-                if (possibleCraftsForRequirement < maxPossibleCrafts) {
-                    maxPossibleCrafts = possibleCraftsForRequirement;
-                }
-            }
-            
-            return maxPossibleCrafts;
-        }
-        
-        // Get cards from a collection
-        async function getCollectionCards(authToken, senderID, collectionId) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'x-user-jwt': authToken
-            };
-            
-            const endpoint = `/collections/${collectionId}/users/${senderID}/owned2`;
-            
-            try {
-                const response = await sendProxyRequest(endpoint, 'GET', headers);
-                
-                // Handle different response structures
-                if (response?.data?.cards) {
-                    return response.data.cards;
-                } else if (Array.isArray(response?.data)) {
-                    return response.data;
-                } else if (Array.isArray(response)) {
-                    return response;
-                }
-                
-                return [];
-            } catch (error) {
-                console.error(`Error fetching cards for collection ${collectionId}:`, error);
-                throw error;
-            }
-        }
-        
-        // Process a single craft
-        async function processCraft(authToken, senderID, cardsByRequirement, usedCardIds, batchNumber, accountSection) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'x-user-jwt': authToken
-            };
-            
-            const craftingPlanId = document.getElementById('craftingPlanId').value || '3202';
-            const silvercoins = parseInt(document.getElementById('silvercoins').value) || 5000;
-            
-            const endpoint = `/crafting/plans/${craftingPlanId}`;
-            
-            // Build requirements array using cards that haven't been used yet
-            const requirements = [];
-            const cardsUsedInThisCraft = [];
-            
-            for (const [requirementId, config] of Object.entries(REQUIREMENTS_CONFIG)) {
-                const cardsNeeded = config.cardsPerCraft;
-                
-                // Get all cards for this requirement
-                const allCards = cardsByRequirement[requirementId] || [];
-                
-                // Filter out cards that have already been used
-                const availableCards = allCards.filter(card => !usedCardIds.has(card.id));
-                
-                if (availableCards.length < cardsNeeded) {
-                    throw new Error(`Not enough unused cards for requirement ${requirementId}. Need ${cardsNeeded}, have ${availableCards.length}`);
-                }
-                
-                // Take the first N unused cards
-                const selectedCards = availableCards.slice(0, cardsNeeded);
-                
-                // Mark these cards as used
-                selectedCards.forEach(card => {
-                    usedCardIds.add(card.id);
-                    cardsUsedInThisCraft.push({
-                        id: card.id,
-                        requirementId: requirementId
-                    });
-                });
-                
-                requirements.push({
-                    requirementId: parseInt(requirementId),
-                    entityIds: selectedCards.map(card => card.id)
-                });
-            }
-            
-            const craftingBody = {
-                requirements: requirements,
-                silvercoins: silvercoins
-            };
-            
-            accountSection.innerHTML += `<p>Sending crafting request for batch ${batchNumber}...</p>`;
-            accountSection.innerHTML += `<p>Using card IDs: ${cardsUsedInThisCraft.map(c => c.id).join(', ')}</p>`;
-            
-            try {
-                const responseCraft = await sendProxyRequest(endpoint, 'POST', headers, craftingBody);
-                
-                if (!responseCraft.success) {
-                    // If crafting fails, we should "unuse" the cards
-                    cardsUsedInThisCraft.forEach(card => usedCardIds.delete(card.id));
-                    throw new Error(`Crafting failed: ${JSON.stringify(responseCraft.error || responseCraft)}`);
-                }
-                
-                accountSection.innerHTML += `<p class="success">Crafting request successful!</p>`;
-                
-                // Process slots from the response
-                const slots = responseCraft.data?.slots || [];
-                
-                if (!slots || slots.length === 0) {
-                    accountSection.innerHTML += `<p class="warning">No slots found in response</p>`;
-                    return true;
-                }
-                
-                accountSection.innerHTML += `<p>Found ${slots.length} slots to open</p>`;
-                
-                // Log all slot IDs for debugging
-                accountSection.innerHTML += `<p>Slot IDs: ${slots.map(s => s.id).join(', ')}</p>`;
-                
-                // Open each slot
-                for (let i = 0; i < slots.length; i++) {
-                    if (stopProcess) break;
-                    
-                    const slotId = slots[i].id;
-                    accountSection.innerHTML += `<p>Opening slot ${i + 1} (ID: ${slotId})...</p>`;
-                    
-                    try {
-                        const slotResult = await openSlot(authToken, slotId);
-                        
-                        if (slotResult && slotResult.success) {
-                            if (slotResult.data?.cards?.length > 0) {
-                                const card = slotResult.data.cards[0];
-                                const cardInfo = `${card.type || 'Unknown'} ${card.mintBatch || ''}${card.mintNumber || ''}`.trim();
-                                accountSection.innerHTML += `<p class="success">Slot ${i + 1}: Got ${cardInfo} with rating ${card.rating || 'N/A'}</p>`;
-                            } else {
-                                accountSection.innerHTML += `<p class="success">Slot ${i + 1} opened successfully</p>`;
-                            }
-                        } else {
-                            throw new Error(`Slot open failed: ${JSON.stringify(slotResult)}`);
-                        }
-                        
-                        // Delay between slot openings (but not after the last one)
-                        if (i < slots.length - 1) {
-                            await delay(2000);
-                        }
-                        
-                    } catch (error) {
-                        accountSection.innerHTML += `<p class="error">Error opening slot ${i + 1}: ${error.message}</p>`;
-                        
-                        // If this is the last slot and it failed, we still consider the craft partially successful
-                        if (i === slots.length - 1) {
-                            accountSection.innerHTML += `<p class="warning">Last slot failed, but craft completed</p>`;
-                        }
-                    }
-                }
-                
-                accountSection.innerHTML += `<p class="success">Craft ${batchNumber} completed successfully!</p>`;
-                return true;
-                
-            } catch (error) {
-                accountSection.innerHTML += `<p class="error">Error in craft ${batchNumber}: ${error.message}</p>`;
-                return false;
-            }
-        }
-        
-        // Open a slot
-        async function openSlot(authToken, slotId) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'x-user-jwt': authToken
-            };
-            
-            const endpoint = `/crafting/slots/${slotId}/open-instant`;
-            
-            try {
-                const response = await sendProxyRequest(endpoint, 'POST', headers);
-                
-                if (!response.success) {
-                    throw new Error(`Slot open failed: ${JSON.stringify(response.error || response)}`);
-                }
-                
-                return response;
-            } catch (error) {
-                console.error(`Error opening slot ${slotId}:`, error);
-                throw error;
-            }
-        }
-        
-        // Stop the script
-        function stopScript() {
-            stopProcess = true;
-            document.getElementById('stopButton').disabled = true;
-            document.getElementById('startButton').disabled = false;
-            addToResultContainer('Process stopped by user', 'warning');
-        }
-    </script>
+        systemState = state;
+        updateSystemStats(state);
+        renderUsers(users);
+        renderLogs(logs);
+      } catch (err) {
+        console.error('Failed to load:', err);
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('refreshAll').addEventListener('click', () => {
+      autoRefresh = false;
+      loadAll();
+      setTimeout(() => { autoRefresh = true; }, 1000);
+    });
+    
+    document.getElementById('checkAllFunds').addEventListener('click', async () => {
+      await sendCommand('/api/check-all-funds');
+      await loadAll();
+    });
+    
+    document.getElementById('refreshLogs').addEventListener('click', async () => {
+      const logs = await fetchDebugLogs(100);
+      renderLogs(logs);
+    });
+
+    document.getElementById('startButton').addEventListener('click', async () => {
+      const maxConcurrent = document.getElementById('maxConcurrent').value;
+      const spinDelay = document.getElementById('spinDelay').value;
+      const minFundsThreshold = document.getElementById('minFunds').value;
+      
+      await sendCommand('/api/start', { maxConcurrent, spinDelay, minFundsThreshold });
+      await loadAll();
+    });
+
+    document.getElementById('pauseButton').addEventListener('click', async () => {
+      await sendCommand('/api/pause');
+      await loadAll();
+    });
+
+    document.getElementById('resetButton').addEventListener('click', async () => {
+      if (confirm('Reset all statistics? User tokens will be preserved.')) {
+        await sendCommand('/api/reset');
+        await loadAll();
+      }
+    });
+
+    // Auto-refresh every 3 seconds
+    setInterval(() => {
+      if (autoRefresh) {
+        loadAll();
+      }
+    }, 3000);
+
+    // Initial load
+    loadAll();
+  </script>
 </body>
 </html>
