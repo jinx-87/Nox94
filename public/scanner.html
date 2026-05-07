@@ -826,7 +826,7 @@
                 acquired: acquiredDate,
                 rating: item.rating || 'N/A',
                 lowestPrice: '0.00', // Default value, will be updated later
-                marketTemplateId: 'N/A' // Will be updated when we get market data
+            marketTemplateId: item.marketId || 'noList' // Will be updated when we get market data
             };
         }
 
@@ -959,7 +959,7 @@
                         const cacheKey = `${collectionId}_${collectionType}`;
                         if (marketPriceCache[cacheKey] && templateId && marketPriceCache[cacheKey][templateId]) {
                             processedItem.lowestPrice = marketPriceCache[cacheKey][templateId].price;
-                            processedItem.marketTemplateId = marketPriceCache[cacheKey][templateId].entityTemplateId;
+                            //processedItem.marketTemplateId = marketPriceCache[cacheKey][templateId].entityTemplateId;
                         }
                         
                         allItems.push(processedItem);
