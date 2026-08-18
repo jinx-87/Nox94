@@ -393,7 +393,7 @@
         let scanResults = {}; // { jwt: { packName: [packIds] } }
         let isScanning = false;
         let stopScanning = false;
-        let totalPackTypes = new Set();
+        let packTypesSet = new Set();
         
         // DOM Elements
         const jwtInput = document.getElementById('jwtInput');
@@ -408,7 +408,7 @@
         const logContainer = document.getElementById('logContainer');
         const totalAccounts = document.getElementById('totalAccounts');
         const totalPacks = document.getElementById('totalPacks');
-        const totalPackTypes = document.getElementById('totalPackTypes');
+        const totalPackTypesEl = document.getElementById('totalPackTypes');
         const statsSummary = document.getElementById('statsSummary');
         
         // Helper function to send requests through proxy
@@ -531,7 +531,7 @@
             
             totalAccounts.textContent = accounts;
             totalPacks.textContent = totalPackCount;
-            totalPackTypes.textContent = allPackTypes.size;
+            totalPackTypesEl.textContent = allPackTypes.size;
             
             if (accounts > 0) {
                 statsSummary.style.display = 'flex';
@@ -641,7 +641,7 @@
             scanResults = {};
             stopScanning = false;
             isScanning = true;
-            totalPackTypes = new Set();
+            packTypesSet = new Set();
             
             // Update UI
             scanBtn.textContent = 'Stop Scanning';
@@ -677,7 +677,7 @@
                     
                     // Track pack types
                     for (const packName in grouped) {
-                        totalPackTypes.add(packName);
+                        packTypesSet.add(packName);
                     }
                     
                     addLog(`✓ Account ${i + 1}: Found ${packCount} packs (${Object.keys(grouped).length} types)`, 'success');
