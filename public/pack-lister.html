@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Card Market Lister</title>
+    <title>Pack Market Lister</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -11,7 +11,7 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-        /* Navigation styles are now in nav.html - keep these for fallback */
+        /* Navigation styles - kept for fallback */
         .nav-bar {
             background: white;
             padding: 15px 20px;
@@ -264,7 +264,7 @@
     <!-- Navigation will be injected here by nav-loader.js -->
     <!-- The old nav-bar div has been removed -->
 
-    <h1>Card Market Lister</h1>
+    <h1>Pack Market Lister</h1>
     
     <div class="config-section">
         <h2>Configuration</h2>
@@ -285,10 +285,10 @@
             <div class="dual-panel">
                 <div class="panel">
                     <div class="textarea-label">
-                        <label for="bundleIdsTextarea">Card IDs (one per line):</label>
+                        <label for="bundleIdsTextarea">Pack IDs (one per line):</label>
                         <span id="bundleIdsCount" class="count-badge">0 IDs</span>
                     </div>
-                    <textarea id="bundleIdsTextarea" placeholder="Enter Card IDs here, one per line. Example:
+                    <textarea id="bundleIdsTextarea" placeholder="Enter Pack IDs here, one per line. Example:
 24718
 24719
 24720
@@ -297,16 +297,16 @@
                 
                 <div class="panel">
                     <div class="textarea-label">
-                        <label for="pricesTextarea">Prices (one per line, corresponding to Card IDs):</label>
+                        <label for="pricesTextarea">Prices (one per line, corresponding to Pack IDs):</label>
                         <span id="pricesCount" class="count-badge">0 prices</span>
                     </div>
-                    <textarea id="pricesTextarea" placeholder="Enter prices here, one per line. Each price corresponds to the Card ID on the same line.
+                    <textarea id="pricesTextarea" placeholder="Enter prices here, one per line. Each price corresponds to the Pack ID on the same line.
 Example:
 2.05
 3.50
 1.75
 ..."></textarea>
-                    <div class="small-note">Each line should match with the corresponding Card ID. If fewer prices are provided, the last price will be repeated.</div>
+                    <div class="small-note">Each line should match with the corresponding Pack ID. If fewer prices are provided, the last price will be repeated.</div>
                 </div>
             </div>
         </div>
@@ -314,9 +314,9 @@ Example:
         <div id="file-tab" class="tab">
             <div class="dual-panel">
                 <div class="panel">
-                    <label for="bundleIdsFile">Upload Card IDs File:</label>
+                    <label for="bundleIdsFile">Upload Pack IDs File:</label>
                     <input type="file" id="bundleIdsFile" accept=".txt,.csv" />
-                    <div class="small-note">Text file with one Card ID per line</div>
+                    <div class="small-note">Text file with one Pack ID per line</div>
                 </div>
                 
                 <div class="panel">
@@ -333,7 +333,7 @@ Example:
     <div class="stats">
         <div class="stat-item">
             <div class="stat-value" id="totalBundles">0</div>
-            <div class="stat-label">Total Cards</div>
+            <div class="stat-label">Total Packs</div>
         </div>
         <div class="stat-item">
             <div class="stat-value" id="processedBundles">0</div>
@@ -354,7 +354,7 @@ Example:
     </div>
     
     <div class="button-group">
-        <button id="startButton">Start Listing Cards</button>
+        <button id="startButton">Start Listing Packs</button>
         <button id="pauseButton" style="display: none;">Pause</button>
         <button id="resumeButton" style="display: none;">Resume</button>
         <button id="downloadButton">Download Results</button>
@@ -363,7 +363,7 @@ Example:
     <div id="notification" class="notification"></div>
     
     <div class="log-container" id="logContainer">
-        <div class="log-entry log-info">Ready to start. Configure your settings, Card IDs, and prices.</div>
+        <div class="log-entry log-info">Ready to start. Configure your settings, Pack IDs, and prices.</div>
     </div>
     
     <!-- Market IDs Container -->
@@ -377,7 +377,7 @@ Example:
         </div>
         
         <div style="margin-top: 20px;">
-            <h3>Market IDs (one per line, corresponds to Card order):</h3>
+            <h3>Market IDs (one per line, corresponds to Pack order):</h3>
             <div class="market-id-list" id="marketIdList">
                 No market IDs created yet
             </div>
@@ -835,7 +835,7 @@ ${detailedHtml}`;
         
         const data = {
             id: parseInt(bundleId),
-            type: "card",
+            type: "pack",
             price: price
         };
         
