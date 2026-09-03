@@ -584,17 +584,13 @@
                     idsCell.className = 'pack-ids-cell';
                     
                     const packIds = packs[packName] || [];
-                    if (packIds.length > 0) {
-                        packIds.forEach(id => {
-                            const span = document.createElement('span');
-                            span.className = 'pack-id';
-                            span.textContent = id;
-                            idsCell.appendChild(span);
-                        });
-                    } else {
-                        idsCell.textContent = '—';
-                        idsCell.style.color = '#999';
-                    }
+if (packIds.length > 0) {
+    const idsText = packIds.join(', ');
+    idsCell.textContent = idsText;
+} else {
+    idsCell.textContent = '—';
+    idsCell.style.color = '#999';
+}
                     
                     row.appendChild(idsCell);
                     resultsBody.appendChild(row);
