@@ -420,7 +420,8 @@
             let hasMore = true;
             
             while (hasMore) {
-                const endpoint = `/packs/user?page=${page}&categoryIds=1`;
+                //const endpoint = `/packs/user?page=${page}&categoryIds=1`;
+                const endpoint = `/packs/user?page=${page}`;
                 const headers = {
                     'Content-Type': 'application/json',
                     'x-user-jwt': authToken
