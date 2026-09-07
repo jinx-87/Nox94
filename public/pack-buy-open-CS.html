@@ -712,7 +712,7 @@ async function buyPacks(authToken, packTemplateId, amount) {
                     
                     // Small delay between buy batches
                     if (batchNum < batches.length) {
-                        await sleep(1000);
+                        await sleep(4000);
                     }
                 }
                 

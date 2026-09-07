@@ -3,1373 +3,748 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collection Scanner - Multi-Account Collection Manager</title>
+    <title>Multi-Account Scanner · CS / Str / KL</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
             max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: #f4f6fa;
+            color: #1e293b;
         }
-        /* Navigation styles - kept for fallback, but nav.html will override */
         .nav-bar {
             background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 12px 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-        .nav-link {
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .nav-link.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .nav-link:not(.active) {
-            background-color: #e0e0e0;
-            color: #333;
-        }
-        .nav-link:not(.active):hover {
-            background-color: #d0d0d0;
-        }
-        .server-info {
-            color: #666;
-            font-size: 12px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 6px 4px;
-            text-align: left;
-            word-wrap: break-word;
-        }
-        th {
-            background-color: #f2f2f2;
-            position: sticky;
-            top: 0;
-            font-weight: bold;
-        }
-        #resultTable {
-            margin-top: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-            display: block;
-        }
-        #statusMessage {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .input-group {
-            margin: 10px 0;
-        }
-        label {
-            display: inline-block;
-            width: 150px;
-        }
-        input, textarea {
-            padding: 5px;
-            width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            padding: 12px 24px;
-            margin-right: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        #startButton {
-            background-color: #4CAF50;
-            color: white;
-        }
-        #startButton:hover:not(:disabled) {
-            background-color: #45a049;
-        }
-        #stopButton {
-            background-color: #f44336;
-            color: white;
-        }
-        #stopButton:hover:not(:disabled) {
-            background-color: #d32f2f;
-        }
-        #tradeButton {
-            background-color: #ff9800;
-            color: white;
-        }
-        #tradeButton:hover:not(:disabled) {
-            background-color: #f57c00;
-        }
-        #downloadButton {
-            background-color: #2196F3;
-            color: white;
-        }
-        #downloadButton:hover:not(:disabled) {
-            background-color: #1976D2;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .tab {
-            display: none;
-        }
-        .tab.active {
-            display: block;
-        }
-        .tab-buttons {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            cursor: pointer;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .tab-button.active {
-            background: #4CAF50;
-            color: white;
-        }
-        .account-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            background: white;
-        }
-        .progress-container {
-            margin: 20px 0;
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 20px;
-            background-color: #4CAF50;
-            border-radius: 10px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        textarea {
-            height: 100px;
-            font-family: monospace;
-        }
-        .checkbox-group {
-            margin: 10px 0;
-            display: flex;
             flex-wrap: wrap;
         }
-        .checkbox-item {
-            margin-right: 15px;
-            margin-bottom: 5px;
+        .nav-links { display: flex; gap: 12px; flex-wrap: wrap; }
+        .nav-link {
+            padding: 6px 18px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: #f1f5f9;
+            color: #1e293b;
+            transition: 0.2s;
         }
-        .radio-group {
-            margin: 10px 0;
+        .nav-link.active { background: #2563eb; color: white; }
+        .nav-link:hover:not(.active) { background: #e2e8f0; }
+        .server-info { font-size: 0.75rem; color: #64748b; background: #f8fafc; padding: 4px 12px; border-radius: 30px; }
+
+        h1 { font-weight: 600; font-size: 1.8rem; letter-spacing: -0.02em; margin: 0 0 8px 0; display: flex; align-items: center; gap: 10px; }
+        .sub { font-weight: 400; color: #475569; font-size: 1rem; }
+
+        .tab-buttons {
+            display: flex; gap: 8px; margin: 20px 0 16px 0;
+            background: white; padding: 6px; border-radius: 60px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            width: fit-content;
         }
-        .radio-item {
-            margin-right: 15px;
+        .tab-button {
+            padding: 8px 24px; border: none; border-radius: 40px; font-weight: 600;
+            background: transparent; color: #475569; cursor: pointer; transition: 0.2s;
         }
-        #mintBatchInput {
-            margin-left: 10px;
-            width: 50px;
-            display: none;
-        }
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .tab-button.active { background: #2563eb; color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.2); }
+        .tab { display: none; margin-top: 8px; }
+        .tab.active { display: block; }
+
         .filter-section {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white; padding: 20px 24px; border-radius: 20px; margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #eef2f6;
         }
-        .filter-title {
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
+        .filter-title { font-weight: 600; margin-bottom: 16px; color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 8px; display: inline-block; }
+
+        .input-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 12px 0; }
+        label { font-weight: 500; font-size: 0.9rem; min-width: 130px; color: #1e293b; }
+        input, textarea, select {
+            padding: 8px 14px; border: 1px solid #d1d9e6; border-radius: 12px;
+            font-size: 0.9rem; background: white; transition: 0.2s; width: 260px;
         }
-        .small-input {
-            width: 100px;
-            margin-left: 10px;
+        input:focus, textarea:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        textarea { height: 90px; font-family: 'JetBrains Mono', monospace; width: 100%; max-width: 500px; }
+        .small-input { width: 110px; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+        .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; }
+        .radio-group { display: flex; gap: 18px; flex-wrap: wrap; }
+        .radio-item { display: flex; align-items: center; gap: 4px; }
+
+        /* game type row - compact */
+        .game-type-row {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+            background: #f8fafc; padding: 8px 18px; border-radius: 40px; border: 1px solid #e2e8f0;
         }
+        .game-type-row .radio-item { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+
         .stats-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+            gap: 16px; background: white; padding: 20px 24px; border-radius: 20px;
+            margin: 20px 0; border: 1px solid #eef2f6;
         }
-        .stat-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            border-left: 4px solid #4CAF50;
+        .stat-box { background: #f8fafc; padding: 12px 8px; border-radius: 14px; text-align: center; border-left: 4px solid #2563eb; }
+        .stat-value { font-size: 26px; font-weight: 700; color: #0f172a; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+
+        .button-group { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 12px; }
+        button {
+            padding: 10px 28px; border: none; border-radius: 40px; font-weight: 600;
+            background: #e2e8f0; color: #1e293b; cursor: pointer; transition: 0.2s;
+            font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;
         }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #startButton { background: #2563eb; color: white; }
+        #startButton:hover:not(:disabled) { background: #1d4ed8; }
+        #stopButton { background: #ef4444; color: white; }
+        #stopButton:hover:not(:disabled) { background: #dc2626; }
+        #tradeButton { background: #f59e0b; color: white; }
+        #tradeButton:hover:not(:disabled) { background: #d97706; }
+        #downloadButton { background: #10b981; color: white; }
+        #downloadButton:hover:not(:disabled) { background: #059669; }
+
+        .progress-container { margin: 16px 0; width: 100%; background: #e2e8f0; border-radius: 40px; overflow: hidden; height: 10px; }
+        .progress-bar { height: 100%; background: #2563eb; width: 0%; transition: width 0.25s ease; }
+
+        .table-container {
+            background: white; border-radius: 20px; padding: 8px 0 0 0;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.02); border: 1px solid #eef2f6;
+            overflow-x: auto; margin-top: 24px;
         }
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            margin-top: 5px;
+        #resultTable { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        #resultTable th {
+            background: #f8fafc; position: sticky; top: 0; z-index: 5;
+            padding: 12px 8px; font-weight: 600; color: #1e293b;
+            border-bottom: 2px solid #e2e8f0; white-space: nowrap;
         }
+        #resultTable td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        #resultTable tr:hover td { background: #fafcff; }
+        #statusMessage { margin: 12px 0; font-weight: 500; padding: 8px 16px; background: white; border-radius: 40px; display: inline-block; }
+
+        .season-group { margin: 12px 0 0 20px; padding: 8px 0 0 16px; border-left: 2px solid #d1d9e6; }
+        .inline-flex { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        #mintBatchInput { display: none; width: 60px; }
+
+        /* multi account hint */
+        .hint { font-size: 0.75rem; color: #64748b; margin-left: 8px; }
+
+        @media (max-width: 700px) { .input-group label { min-width: 100px; } input, textarea { width: 100%; } }
     </style>
 </head>
 <body>
-    <!-- Navigation will be injected here by nav-loader.js -->
-    <!-- The old nav-bar div has been removed -->
+    <!-- navigation placeholder -->
+    <div id="nav-placeholder"></div>
 
-    <h1>Multi-Account Collection Scanner</h1>
-    
+    <h1>📦 Collection Scanner <span class="sub">· CS / Str / KL</span></h1>
+
     <div class="tab-buttons">
-        <button class="tab-button active" onclick="switchTab('single')">Single Account</button>
-        <button class="tab-button" onclick="switchTab('multi')">Multiple Accounts</button>
+        <button class="tab-button active" data-tab="single">Single Account</button>
+        <button class="tab-button" data-tab="multi">Multiple Accounts</button>
     </div>
 
+    <!-- SINGLE -->
     <div id="single-tab" class="tab active">
-        <div class="input-group">
-            <label for="authToken">Auth Token:</label>
-            <input type="text" id="authToken" placeholder="Enter your auth token">
-        </div>
-        
-        <div class="input-group">
-            <label for="senderID">Sender ID:</label>
-            <input type="text" id="senderID" placeholder="Enter sender ID">
-        </div>
-        
-        <div class="input-group">
-            <label for="receiverID">Receiver ID:</label>
-            <input type="text" id="receiverID" placeholder="Enter receiver ID">
-        </div>
+        <div class="input-group"><label>Auth Token</label><input type="text" id="authToken" placeholder="eyJhbGci..."></div>
+        <div class="input-group"><label>Sender ID</label><input type="text" id="senderID" placeholder="user-id"></div>
+        <div class="input-group"><label>Receiver ID (optional)</label><input type="text" id="receiverID" placeholder="leave empty if not trading"></div>
     </div>
 
+    <!-- MULTI -->
     <div id="multi-tab" class="tab">
         <div class="input-group">
-            <label for="authTokensTextarea">Auth Tokens (one per line):</label>
-            <textarea id="authTokensTextarea" placeholder="Paste auth tokens here, one per line"></textarea>
+            <label>Auth Tokens (one/line)</label>
+            <textarea id="authTokensTextarea" placeholder="token1&#10;token2&#10;(or one token for all)"></textarea>
+            <span class="hint">If one token, it will be used for all sender IDs</span>
         </div>
         <div class="input-group">
-            <label for="senderIDsTextarea">Sender IDs (one per line):</label>
-            <textarea id="senderIDsTextarea" placeholder="Paste sender IDs here, one per line"></textarea>
+            <label>Sender IDs (one/line)</label>
+            <textarea id="senderIDsTextarea" placeholder="id1&#10;id2&#10;id3"></textarea>
         </div>
         <div class="input-group">
-            <label for="receiverIDsTextarea">Receiver IDs (one per line):</label>
-            <textarea id="receiverIDsTextarea" placeholder="Paste receiver IDs here, one per line"></textarea>
+            <label>Receiver IDs (optional)</label>
+            <textarea id="receiverIDsTextarea" placeholder="recv1&#10;recv2&#10;(leave empty if not trading)"></textarea>
+            <span class="hint">If empty, no trades will be sent</span>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-section">
+        <div class="filter-title">Collection filters</div>
+        <div class="input-group"><label>Included collections</label><input id="includedCollections" placeholder="123,456"></div>
+        <div class="input-group"><label>Excluded collections (extra)</label><input id="excludedCollections" placeholder="789 (adds to default exclusions)"></div>
+        <div class="input-group"><label>Min mint</label><input type="number" id="minMint" class="small-input" placeholder="0"><label style="min-width:auto;margin-left:12px;">Max mint</label><input type="number" id="maxMint" class="small-input" placeholder="9999"></div>
+        <div class="input-group"><label>Mint batch</label><input type="checkbox" id="filterMintBatch"><input type="text" id="mintBatchInput" placeholder="A" maxlength="2"></div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-title">Status filters</div>
+        <div class="checkbox-group">
+            <span class="checkbox-item"><input type="checkbox" id="hideImxLocked"><label>Hide IMX locked</label></span>
+            <span class="checkbox-item"><input type="checkbox" id="hideMarketListed"><label>Hide market listed</label></span>
+            <span class="checkbox-item"><input type="checkbox" id="hideBundleItems"><label>Hide bundle items</label></span>
         </div>
     </div>
 
     <div class="filter-section">
-        <div class="filter-title">Collection Filters</div>
+        <div class="filter-title">Game &amp; season</div>
+        <!-- compact game type row -->
         <div class="input-group">
-            <label for="includedCollections">Included Collections:</label>
-            <input type="text" id="includedCollections" placeholder="Comma-separated collection IDs">
-        </div>
-
-        <div class="input-group">
-            <label for="excludedCollections">Excluded Collections:</label>
-            <input type="text" id="excludedCollections" placeholder="Comma-separated collection IDs">
-        </div>
-
-        <div class="input-group">
-            <label for="minMint">Min Mint Number:</label>
-            <input type="number" id="minMint" placeholder="Enter minimum mint number" class="small-input">
-            <label for="maxMint" style="width: auto; margin-left: 20px;">Max Mint Number:</label>
-            <input type="number" id="maxMint" placeholder="Enter maximum mint number" class="small-input">
-        </div>
-
-        <div class="input-group">
-            <label>Filter by Mint Batch:</label>
-            <input type="checkbox" id="filterMintBatch">
-            <input type="text" id="mintBatchInput" placeholder="A, B, etc" maxlength="1">
-        </div>
-    </div>
-
-    <div class="filter-section">
-        <div class="filter-title">Status Filters</div>
-        <div class="input-group">
-            <label>Hide IMX Locked Items:</label>
-            <input type="checkbox" id="hideImxLocked">
-        </div>
-        
-        <div class="input-group">
-            <label>Hide Market Listed Items:</label>
-            <input type="checkbox" id="hideMarketListed">
-        </div>
-        
-        <div class="input-group">
-            <label>Hide Bundle Items:</label>
-            <input type="checkbox" id="hideBundleItems">
-        </div>
-    </div>
-
-    <div class="filter-section">
-        <div class="filter-title">Game Filters</div>
-        <div class="input-group">
-            <label>Game Type:</label>
-            <div class="radio-group">
-                <span class="radio-item">
-                    <input type="radio" id="gameTypeCS" name="gameType" value="1" checked>
-                    <label for="gameTypeCS">CS</label>
-                </span>
-                <span class="radio-item">
-                    <input type="radio" id="gameTypeStr" name="gameType" value="2">
-                    <label for="gameTypeStr">Str</label>
-                </span>
+            <label>Game type</label>
+            <div class="game-type-row">
+                <span class="radio-item"><input type="radio" name="gameType" value="1" checked id="gtCS"><label for="gtCS">CS (1)</label></span>
+                <span class="radio-item"><input type="radio" name="gameType" value="2" id="gtStr"><label for="gtStr">Str (2)</label></span>
+                <span class="radio-item"><input type="radio" name="gameType" value="73" id="gtKL"><label for="gtKL">KL (73)</label></span>
             </div>
         </div>
 
-        <div class="input-group">
-            <label>Seasons (CS only):</label>
+        <!-- CS seasons -->
+        <div id="csSeasonsContainer" class="season-group">
             <div class="checkbox-group" id="seasonCheckboxes">
-                <span class="checkbox-item">
-                    <input type="checkbox" id="seasonAll" class="season-checkbox" checked>
-                    <label for="seasonAll">All</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="seasonFounders" class="season-checkbox" checked>
-                    <label for="seasonFounders">Founders+Edition</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2018" class="season-checkbox" checked>
-                    <label for="season2018">2018</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2019" class="season-checkbox" checked>
-                    <label for="season2019">2019</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2020" class="season-checkbox" checked>
-                    <label for="season2020">2020</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2021" class="season-checkbox" checked>
-                    <label for="season2021">2021</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2022" class="season-checkbox" checked>
-                    <label for="season2022">2022</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2023" class="season-checkbox" checked>
-                    <label for="season2023">2023</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2024" class="season-checkbox" checked>
-                    <label for="season2024">2024</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2025" class="season-checkbox" checked>
-                    <label for="season2025">2025</label>
-                </span>
-                <span class="checkbox-item">
-                    <input type="checkbox" id="season2026" class="season-checkbox" checked>
-                    <label for="season2026">2026</label>
-                </span>
+                <span class="checkbox-item"><input type="checkbox" id="seasonAllCS" class="season-cs" checked><label>All</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="seasonFounders" class="season-cs" checked><label>Founders+Edition</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2018" class="season-cs" checked><label>2018</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2019" class="season-cs" checked><label>2019</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2020" class="season-cs" checked><label>2020</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2021" class="season-cs" checked><label>2021</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2022" class="season-cs" checked><label>2022</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2023" class="season-cs" checked><label>2023</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2024" class="season-cs" checked><label>2024</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2025" class="season-cs" checked><label>2025</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2026" class="season-cs" checked><label>2026</label></span>
+            </div>
+        </div>
+
+        <!-- KL seasons (added 2026-27) -->
+        <div id="klSeasonsContainer" class="season-group" style="display:none;">
+            <div class="checkbox-group" id="seasonKLCheckboxes">
+                <span class="checkbox-item"><input type="checkbox" id="seasonAllKL" class="season-kl" checked><label>All</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2023_24" class="season-kl" checked><label>2023-24</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2024_25" class="season-kl" checked><label>2024-25</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2025_26" class="season-kl" checked><label>2025-26</label></span>
+                <span class="checkbox-item"><input type="checkbox" id="season2026_27" class="season-kl" checked><label>2026-27</label></span>
             </div>
         </div>
     </div>
 
+    <!-- STATS -->
     <div class="stats-panel">
-        <div class="stat-box">
-            <div class="stat-value" id="totalAccounts">0</div>
-            <div class="stat-label">Accounts</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="totalItems">0</div>
-            <div class="stat-label">Total Items</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="filteredItems">0</div>
-            <div class="stat-label">Filtered Items</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="tradesCreated">0</div>
-            <div class="stat-label">Trades Created</div>
-        </div>
+        <div class="stat-box"><div class="stat-value" id="totalAccounts">0</div><div class="stat-label">Accounts</div></div>
+        <div class="stat-box"><div class="stat-value" id="totalItems">0</div><div class="stat-label">Total items</div></div>
+        <div class="stat-box"><div class="stat-value" id="filteredItems">0</div><div class="stat-label">Filtered</div></div>
+        <div class="stat-box"><div class="stat-value" id="tradesCreated">0</div><div class="stat-label">Trades created</div></div>
     </div>
 
     <div class="button-group">
-        <button id="startButton">Start Scanning</button>
-        <button id="stopButton" disabled>Stop</button>
-        <button id="tradeButton" disabled>Start Trading</button>
-        <button id="downloadButton" disabled>Download CSV</button>
+        <button id="startButton">▶ Start scanning</button>
+        <button id="stopButton" disabled>⏹ Stop</button>
+        <button id="tradeButton" disabled>🔁 Start trading</button>
+        <button id="downloadButton" disabled>⬇ Download CSV</button>
     </div>
 
-    <div id="statusMessage"></div>
-
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
+    <div id="statusMessage">Ready</div>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
     <div class="table-container">
         <table id="resultTable">
-            <thead id="tableHeader">
-                <tr>
-                    <th>User ID</th>
-                    <th>ID</th>
-                    <th>Batch</th>
-                    <th>Mint</th>
-                    <th>Type</th>
-                    <th>Coll ID</th>
-                    <th>Title</th>
-                    <th>Templ ID</th>
-                    <th>Lowest Price</th>
-                    <th>Circ</th>
-                    <th>Minted</th>
-                    <th>Templ Title</th>
-                    <th>Rarity</th>
-                    <th>Market ID</th>
-                    <th>Status</th>
-                    <th>ETH Status</th>
-                    <th>Mkt Listed</th>
-                    <th>Acq</th>
-                    <th>Rate</th>
-                </tr>
-            </thead>
+            <thead><tr>
+                <th>Sender</th><th>ID</th><th>Batch</th><th>Mint</th><th>Type</th><th>Coll ID</th>
+                <th>Title</th><th>Templ ID</th><th>Lowest price</th><th>Circ</th><th>Minted</th>
+                <th>Full title</th><th>Rarity</th><th>Market ID</th><th>Status</th><th>ETH</th>
+                <th>Listed</th><th>Acquired</th><th>Rating</th>
+            </tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 
-<script src="/nav-loader.js"></script>
 <script>
-    const tradeChunkSize = 50; // Items per trade
-    const batchSize = 4; // Parallel trades
-    const requestDelay = 3000; // 3s delay between batches
-    
-    let stopProcess = false;
-    let isPaused = false;
-    let accountItems = {}; // Store items per account: { senderID: { allItems: [], filteredItems: [] } }
-    let accountPairs = []; // Store multiple account info
-    let currentAccountIndex = 0;
+    // ----- CONFIG -----
+    const PROXY_URL = '/proxy';
+    const TRADE_CHUNK = 50;
+    const BATCH_SIZE = 4;
+    const REQUEST_DELAY = 3000;
+
+    // ---- DEFAULT EXCLUDED COLLECTIONS (always applied) ----
+    const DEFAULT_EXCLUDED = new Set([
+        1,2,3,4,5,6,7,8,9,10,11,104,105,106,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,
+        181,183,188,928,929,930,931,932,933,934,935,936,937,938,939,940,941,943,945,946,947,
+        2740,2938,2939,2940,2941,2942,2943,2944,2945,2946,2947,2948,2950,2953,2954,2955,2957,2958,2959,
+        2961,2964,2966,6650,6651,6652,6653,6654,6655,6656,6657,6658,6659,6660,6661,6662,6663,6664,6665,6666,
+        18316,18514,18877,18911,18913,18914,18927,18928,18930,20131,18918,18932,
+        11155,11156,11157,11225,11551,16411,16412,16413,2542,2543,1376,1378,1379,1380,1381,1383,1384,1385
+    ]);
+
+    let stopFlag = false;
+    let accountItems = {};
+    let accountPairs = [];
+    let currentAccountIdx = 0;
     let tradeCounter = 0;
+    let marketCache = {};
 
-    // Cache for market prices to avoid duplicate requests.
-    // Structure: { collectionId_type: { templateId: { price, inCirculation, minted, templateTitle, rarity } } }
-    let marketPriceCache = {};
+    // DOM refs
+    const $ = id => document.getElementById(id);
+    const startBtn = $('startButton'), stopBtn = $('stopButton'), tradeBtn = $('tradeButton'), downBtn = $('downloadButton');
+    const statusEl = $('statusMessage'), progressBar = $('progressBar');
+    const tableBody = $('tableBody');
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        // Note: Server health check is now handled by nav-loader.js
-        
-        document.getElementById('startButton').addEventListener('click', fetchCollectionItems);
-        document.getElementById('stopButton').addEventListener('click', stopScript);
-        document.getElementById('tradeButton').addEventListener('click', startTrading);
-        document.getElementById('downloadButton').addEventListener('click', downloadData);
-        
-        // Mint batch filter toggle
-        document.getElementById('filterMintBatch').addEventListener('change', function() {
-            document.getElementById('mintBatchInput').style.display = this.checked ? 'inline-block' : 'none';
-        });
-        
-        // Game type change handler
-        document.querySelectorAll('input[name="gameType"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.getElementById('seasonCheckboxes').style.opacity = this.value === '1' ? '1' : '0.5';
-            });
-        });
-        
-        // "Select All" seasons checkbox
-        document.getElementById('seasonAll').addEventListener('change', function() {
-            document.querySelectorAll('.season-checkbox:not(#seasonAll)').forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
-        
-        // Individual season checkbox handler
-        document.querySelectorAll('.season-checkbox:not(#seasonAll)').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const allChecked = [...document.querySelectorAll('.season-checkbox:not(#seasonAll)')]
-                    .every(cb => cb.checked);
-                document.getElementById('seasonAll').checked = allChecked;
-            });
+    // ----- UI helpers -----
+    function updateStatus(msg, color='#1e293b') {
+        statusEl.textContent = msg; statusEl.style.color = color;
+        console.log('[status]', msg);
+    }
+    function updateStats() {
+        let total=0, filtered=0;
+        for (const s in accountItems) { total += accountItems[s].allItems.length; filtered += accountItems[s].filteredItems.length; }
+        $('totalAccounts').textContent = Object.keys(accountItems).length;
+        $('totalItems').textContent = total;
+        $('filteredItems').textContent = filtered;
+        $('tradesCreated').textContent = tradeCounter;
+    }
+    function addItemsToTable(items) {
+        const fields = ['senderID','id','mintBatch','mintNumber','type','collectionId','templateTitle',
+            'templateId','lowestPrice','inCirculation','minted','fullTemplateTitle','rarity',
+            'marketTemplateId','status','ethStatus','isMarketList','acquired','rating'];
+        for (const item of items) {
+            const tr = document.createElement('tr');
+            for (const f of fields) {
+                const td = document.createElement('td');
+                let v = item[f] ?? 'N/A';
+                if (typeof v === 'boolean') v = v ? 'Yes' : 'No';
+                if (f === 'lowestPrice' && v !== 'N/A' && v !== '0.00') v = parseFloat(v).toFixed(2);
+                td.textContent = v;
+                if (f === 'lowestPrice' && v !== 'N/A' && v !== '0.00') {
+                    const num = parseFloat(v);
+                    if (num < 1.0) { td.style.color = '#16a34a'; td.style.fontWeight='bold'; }
+                    else if (num > 10.0) { td.style.color = '#dc2626'; td.style.fontWeight='bold'; }
+                }
+                tr.appendChild(td);
+            }
+            tableBody.appendChild(tr);
+        }
+    }
+
+    // ----- TAB SWITCH -----
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const target = this.dataset.tab + '-tab';
+            $(target).classList.add('active');
         });
     });
 
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-        
-        document.getElementById(tabName + '-tab').classList.add('active');
-        document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add('active');
-    }
+    // ----- GAME TYPE TOGGLE -----
+    document.querySelectorAll('input[name="gameType"]').forEach(r => {
+        r.addEventListener('change', function() {
+            const val = this.value;
+            const csDiv = $('csSeasonsContainer'), klDiv = $('klSeasonsContainer');
+            if (val === '1') { csDiv.style.display = 'block'; klDiv.style.display = 'none'; }
+            else if (val === '73') { csDiv.style.display = 'none'; klDiv.style.display = 'block'; }
+            else { csDiv.style.display = 'none'; klDiv.style.display = 'none'; }
+        });
+    });
 
-    // Update stats
-    function updateStats() {
-        let totalItems = 0;
-        let filteredItems = 0;
-        
-        for (const senderID in accountItems) {
-            totalItems += accountItems[senderID].allItems.length;
-            filteredItems += accountItems[senderID].filteredItems.length;
-        }
-        
-        document.getElementById('totalAccounts').textContent = Object.keys(accountItems).length;
-        document.getElementById('totalItems').textContent = totalItems;
-        document.getElementById('filteredItems').textContent = filteredItems;
-        document.getElementById('tradesCreated').textContent = tradeCounter;
-    }
-
-    // Main function to fetch and display collection items
-    async function fetchCollectionItems() {
-        if (isPaused) return;
-        
-        // Reset state
-        stopProcess = false;
-        document.getElementById('stopButton').disabled = false;
-        document.getElementById('startButton').disabled = true;
-        document.getElementById('tradeButton').disabled = true;
-        document.getElementById('downloadButton').disabled = true;
-        document.getElementById('tableBody').innerHTML = '';
-        document.getElementById('progressBar').style.width = '0%';
-        
-        accountItems = {};
-        accountPairs = [];
-        currentAccountIndex = 0;
-        tradeCounter = 0;
-        marketPriceCache = {}; // Clear cache
-        
-        updateStatus('Starting process...', 'blue');
-        updateStats();
-        
-        try {
-            // Get collection filters
-            const includedCollectionsText = document.getElementById('includedCollections').value.trim();
-            const excludedCollectionsText = document.getElementById('excludedCollections').value.trim();
-            
-            if (includedCollectionsText && excludedCollectionsText) {
-                updateStatus('Error: Cannot have both included and excluded collections filled. Please clear one.', 'red');
-                return;
-            }
-            
-            const includedCollections = includedCollectionsText ? 
-                includedCollectionsText.split(',').map(id => parseInt(id.trim())) : [];
-            const excludedCollections = excludedCollectionsText ? 
-                excludedCollectionsText.split(',').map(id => parseInt(id.trim())) : [];
-            
-            // Get min and max mint filters
-            const minMintInput = document.getElementById('minMint').value.trim();
-            const maxMintInput = document.getElementById('maxMint').value.trim();
-            const minMint = minMintInput ? parseInt(minMintInput) : null;
-            const maxMint = maxMintInput ? parseInt(maxMintInput) : null;
-            
-            // Get mint batch filter
-            const filterMintBatch = document.getElementById('filterMintBatch').checked;
-            const mintBatch = filterMintBatch ? 
-                document.getElementById('mintBatchInput').value.trim().toUpperCase() : null;
-            
-            // Get status filters
-            const hideImxLocked = document.getElementById('hideImxLocked').checked;
-            const hideMarketListed = document.getElementById('hideMarketListed').checked;
-            const hideBundleItems = document.getElementById('hideBundleItems').checked;
-            
-            // Get game type
-            const gameType = document.querySelector('input[name="gameType"]:checked').value;
-            
-            // Get seasons (only for CS)
-            const seasons = gameType === '1' ? 
-                Array.from(document.querySelectorAll('.season-checkbox:not(#seasonAll):checked'))
-                    .map(cb => cb.id.replace('season', '').replace('Founders', 'Founders+Edition')) : 
-                [];
-            
-            // Get account pairs based on selected tab
-            const useMultiAccount = document.getElementById('multi-tab').classList.contains('active');
-            
-            if (useMultiAccount) {
-                // Process multiple accounts
-                const authTokensText = document.getElementById('authTokensTextarea').value.trim();
-                const senderIDsText = document.getElementById('senderIDsTextarea').value.trim();
-                const receiverIDsText = document.getElementById('receiverIDsTextarea').value.trim();
-                
-                if (!authTokensText || !senderIDsText || !receiverIDsText) {
-                    updateStatus('Please enter all three sets of data for multiple accounts', 'red');
-                    return;
-                }
-                
-                const authTokens = authTokensText.split('\n').filter(line => line.trim() !== '');
-                const senderIDs = senderIDsText.split('\n').filter(line => line.trim() !== '');
-                const receiverIDs = receiverIDsText.split('\n').filter(line => line.trim() !== '');
-                
-                if (authTokens.length !== senderIDs.length || authTokens.length !== receiverIDs.length) {
-                    updateStatus('The number of auth tokens, sender IDs, and receiver IDs must match', 'red');
-                    return;
-                }
-                
-                accountPairs = authTokens.map((token, index) => ({
-                    token: token.trim(),
-                    senderID: senderIDs[index].trim(),
-                    receiverID: receiverIDs[index].trim()
-                }));
-            } else {
-                // Process single account
-                const authToken = document.getElementById('authToken').value.trim();
-                const senderID = document.getElementById('senderID').value.trim();
-                const receiverID = document.getElementById('receiverID').value.trim();
-                
-                if (!authToken || !senderID) {
-                    updateStatus('Please enter both auth token and sender ID', 'red');
-                    return;
-                }
-                
-                accountPairs = [{
-                    token: authToken,
-                    senderID: senderID,
-                    receiverID: receiverID || senderID // Fallback to senderID if receiver not specified
-                }];
-            }
-            
-            if (accountPairs.length === 0) {
-                updateStatus('No valid account pairs found', 'red');
-                return;
-            }
-            
-            updateStatus(`Found ${accountPairs.length} account(s) to process`, 'blue');
-            
-            // Process each account sequentially
-            for (currentAccountIndex = 0; currentAccountIndex < accountPairs.length; currentAccountIndex++) {
-                if (stopProcess) break;
-                
-                const pair = accountPairs[currentAccountIndex];
-                await processAccount(
-                    pair.token, 
-                    pair.senderID, 
-                    minMint,
-                    maxMint,
-                    mintBatch,
-                    includedCollections,
-                    excludedCollections,
-                    hideImxLocked,
-                    hideMarketListed,
-                    hideBundleItems,
-                    gameType,
-                    seasons
-                );
-                
-                // Update progress
-                document.getElementById('progressBar').style.width = `${((currentAccountIndex + 1) / accountPairs.length) * 100}%`;
-                updateStats();
-                
-                // Add delay between accounts unless it's the last one
-                if (currentAccountIndex < accountPairs.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-            
-            if (!stopProcess) {
-                // Calculate total filtered items across all accounts
-                let totalFilteredItems = 0;
-                for (const senderID in accountItems) {
-                    totalFilteredItems += accountItems[senderID].filteredItems.length;
-                }
-                
-                updateStatus(`Scan completed successfully! Found ${totalFilteredItems} items`, 'green');
-                document.getElementById('tradeButton').disabled = false;
-                document.getElementById('downloadButton').disabled = false;
-            }
-        } catch (error) {
-            updateStatus(`Error: ${error.message}`, 'red');
-        } finally {
-            document.getElementById('startButton').disabled = false;
-            document.getElementById('stopButton').disabled = true;
-        }
-    }
-
-    async function processAccount(authToken, senderID, minMint, maxMint, mintBatch, includedCollections, excludedCollections, hideImxLocked, hideMarketListed, hideBundleItems, gameType, seasons) {
-        updateStatus(`Processing account ${currentAccountIndex + 1} (Sender: ${senderID})`, 'blue');
-        
-        // Initialize storage for this account
-        if (!accountItems[senderID]) {
-            accountItems[senderID] = {
-                allItems: [],
-                filteredItems: []
-            };
-        }
-
-        try {
-            // Step 1: Get collections with their types
-            const collections = await getCollections(authToken, senderID, includedCollections, excludedCollections, gameType, seasons);
-            
-            if (stopProcess) return;
-            
-            // Step 2: Get items for each collection
-            updateStatus(`Found ${collections.length} collections. Fetching items...`, 'blue');
-            
-            for (const collection of collections) {
-                if (stopProcess) break;
-                
-                updateStatus(`Fetching ${collection.type} items for collection ${collection.id}...`, 'blue');
-                const items = await getCollectionItems(authToken, senderID, collection.id, collection.type, gameType);
-                
-                if (items && items.length > 0) {
-                    // Filter items based on criteria
-                    const itemsToDisplay = items.filter(item => {
-                        // Min mint number filter
-                        if (minMint !== null && item.mintNumber < minMint) return false;
-                        
-                        // Max mint number filter
-                        if (maxMint !== null && item.mintNumber > maxMint) return false;
-                        
-                        // Mint batch filter
-                        if (mintBatch !== null && item.mintBatch !== mintBatch) return false;
-                        
-                        // IMX locked filter
-                        if (hideImxLocked && item.status === 'imx_locked') return false;
-                        
-                        // Market listed filter
-                        if (hideMarketListed && item.status === 'market') return false;
-                        
-                        // Bundle items filter
-                        if (hideBundleItems && item.status === 'bundle') return false;
-                        
-                        return true;
-                    });
-                    
-                    // Add senderID to each item
-                    items.forEach(item => item.senderID = senderID);
-                    itemsToDisplay.forEach(item => item.senderID = senderID);
-                    
-                    // Store items per account
-                    accountItems[senderID].allItems = accountItems[senderID].allItems.concat(items);
-                    accountItems[senderID].filteredItems = accountItems[senderID].filteredItems.concat(itemsToDisplay);
-                    
-                    // Add new items to the existing table
-                    addItemsToTable(itemsToDisplay);
-                }
-            }
-        } catch (error) {
-            console.error(`Error processing account ${senderID}:`, error);
-            throw error;
-        }
-    }
-
-    // Process item to extract only the needed fields (extended with new fields from 21.30)
-    function processItem(item, type, templateTitle, templateId, collectionId, marketData = null) {
-        // For stickers, extract the title from stickerTemplate if available
-        let actualTemplateTitle = templateTitle;
-        if (type === 'sticker' && item.stickerTemplate && item.stickerTemplate.title) {
-            actualTemplateTitle = item.stickerTemplate.title;
-        }
-        
-        // Format status and market list values for consistency
-        const status = item.status || 'N/A';
-        const isMarketList = item.isMarketList === true ? 'Yes' : 'No';
-        
-        // Extract acquired date from history if available
-        let acquiredDate = 'N/A';
-        if (item.history && item.history.length > 0) {
-            // Find the most recent pack acquisition or use the first history entry
-            const packHistory = item.history.find(h => h.type === 'pack') || item.history[0];
-            acquiredDate = packHistory.created || 'N/A';
-        }
-        
-        // NEW FIELDS from marketData (if available) - from 21.30 version
-        let inCirculation = '';
-        let minted = '';
-        let fullTemplateTitle = '';
-        let rarity = '';
-        if (marketData) {
-            inCirculation = marketData.inCirculation !== undefined ? marketData.inCirculation : '';
-            minted = marketData.minted !== undefined ? marketData.minted : '';
-            fullTemplateTitle = marketData.templateTitle || '';
-            rarity = marketData.rarity || '';
-        }
-        
-        return {
-            id: item.id,
-            mintBatch: item.mintBatch,
-            mintNumber: item.mintNumber,
-            type: type,
-            collectionId: collectionId,
-            templateTitle: actualTemplateTitle || 'Unknown',
-            templateId: templateId || 'N/A',
-            status: status,
-            ethStatus: item.ethStatus || 'N/A',
-            isMarketList: isMarketList,
-            acquired: acquiredDate,
-            rating: item.rating || 'N/A',
-            lowestPrice: marketData ? marketData.price : '0.00',
-            marketTemplateId: item.marketId || 'noList',
-            // New fields from 21.30
-            inCirculation: inCirculation,
-            minted: minted,
-            fullTemplateTitle: fullTemplateTitle,
-            rarity: rarity
-        };
-    }
-
-    // Get all collections for the user with their types
-    async function getCollections(authToken, senderID, includedCollections, excludedCollections, gameType, seasons) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'x-user-jwt': authToken
-        };
-
-        const collections = [];
-        
-        // For Str, we don't need seasons
-        if (gameType === '2') {
-            const endpoint = `/collections/users/${senderID}/user-summary?categoryId=${gameType}`;
-            
-            try {
-                const response = await sendProxyRequest(endpoint, 'GET', headers);
-                
-                if (response.data) {
-                    response.data.forEach(item => {
-                        if (item.count > 0 && 
-                            (includedCollections.length > 0 ? includedCollections.includes(item.collection.id) : 
-                             !excludedCollections.includes(item.collection.id)) &&
-                            !item.collection.properties.tiers.includes("Loadout")) {
-                            collections.push({
-                                id: item.collection.id,
-                                type: item.collection.properties.entity_types[0] // 'card' or 'sticker'
-                            });
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error(`Error fetching collection for Str:`, error);
-            }
-        } 
-        // For CS, process each season
-        else {
-            for (const season of seasons) {
-                if (stopProcess) break;
-                
-                const endpoint = `/collections/users/${senderID}/user-summary?categoryId=${gameType}&seasons=${season}`;
-                
-                try {
-                    const response = await sendProxyRequest(endpoint, 'GET', headers);
-                    
-                    if (response.data) {
-                        response.data.forEach(item => {
-                            if (item.count > 0 && 
-                                (includedCollections.length > 0 ? includedCollections.includes(item.collection.id) : 
-                                 !excludedCollections.includes(item.collection.id)) &&
-                                !item.collection.properties.tiers.includes("Loadout")) {
-                                collections.push({
-                                    id: item.collection.id,
-                                    type: item.collection.properties.entity_types[0] // 'card' or 'sticker'
-                                });
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error fetching collection for season ${season}:`, error);
-                }
-            }
-        }
-        
-        return collections;
-    }
-
-    // Get items for a specific collection including template titles and market prices (extended from 21.30)
-    async function getCollectionItems(authToken, senderID, collectionId, collectionType, categoryId) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'x-user-jwt': authToken
-        };
-        
-        const itemsEndpoint = `/collections/${collectionId}/users/${senderID}/owned2`;
-        const templatesEndpoint = collectionType === 'sticker' 
-            ? `/collections/${collectionId}/sticker-templates`
-            : `/collections/${collectionId}/card-templates`;
-        
-        const uniqueItems = new Set();
-        const allItems = [];
-
-        try {
-            // First fetch the items
-            const itemsResponse = await sendProxyRequest(itemsEndpoint, 'GET', headers);
-            
-            // Then fetch the templates for this collection
-            let templateMap = {};
-            try {
-                const templatesResponse = await sendProxyRequest(templatesEndpoint, 'GET', headers);
-                if (templatesResponse?.data) {
-                    templatesResponse.data.forEach(template => {
-                        templateMap[template.id] = {
-                            title: template.title,
-                            id: template.id
-                        };
-                    });
-                }
-            } catch (error) {
-                console.error(`Error fetching templates for collection ${collectionId}:`, error);
-            }
-
-            // Fetch market prices for this collection (enhanced with additional fields from 21.30)
-            await fetchMarketPrices(authToken, collectionId, collectionType, categoryId);
-
-            // Handle both cards and stickers response
-            const items = collectionType === 'sticker' 
-                ? (itemsResponse?.data?.stickers || [])
-                : (itemsResponse?.data?.cards || []);
-            
-            // Process items with their template titles and additional fields
-            for (const item of items) {
-                const itemKey = item.id || JSON.stringify(item);
-                if (!uniqueItems.has(itemKey)) {
-                    uniqueItems.add(itemKey);
-                    
-                    // Get template info from map or from item data
-                    const templateId = collectionType === 'sticker' ? item.stickerTemplateId : item.cardTemplateId;
-                    const templateInfo = templateId ? templateMap[templateId] : { title: 'Unknown', id: 'N/A' };
-                    
-                    // Retrieve market data from cache (now includes extended info)
-                    const cacheKey = `${collectionId}_${collectionType}`;
-                    let marketData = null;
-                    if (marketPriceCache[cacheKey] && templateId && marketPriceCache[cacheKey][templateId]) {
-                        marketData = marketPriceCache[cacheKey][templateId];
-                    }
-                    
-                    const processedItem = processItem(item, collectionType, templateInfo.title, templateInfo.id, collectionId, marketData);
-                    
-                    // Add the additional fields from the item data (status, ethStatus, etc.)
-                    processedItem.status = item.status || 'N/A';
-                    processedItem.ethStatus = item.ethStatus || 'N/A';
-                    processedItem.isMarketList = item.isMarketList === true ? 'Yes' : 'No';
-                    
-                    allItems.push(processedItem);
-                }
-            }
-
-            console.log(`Fetched ${allItems.length} ${collectionType} items for ${collectionId}`);
-            return allItems;
-        } catch (error) {
-            console.error(`Error fetching ${collectionType} items for ${collectionId}:`, error);
-            return allItems; // Return what we have
-        }
-    }
-
-    // Fetch market prices for a specific collection - now also grabs inCirculation, minted, title, rarity (from 21.30)
-    async function fetchMarketPrices(authToken, collectionId, collectionType, categoryId) {
-        const cacheKey = `${collectionId}_${collectionType}`;
-        
-        // Check if we already have prices for this collection
-        if (marketPriceCache[cacheKey]) {
-            return marketPriceCache[cacheKey];
-        }
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'x-user-jwt': authToken
-        };
-        
-        const prices = {};
-        let page = 1;
-        let totalItems = 0;
-        let itemsProcessed = 0;
-        
-        try {
-            updateStatus(`Fetching market data (incl. circulation/minted/rarity) for collection ${collectionId}...`, 'blue');
-            
-            // Fetch all pages
-            while (true) {
-                if (stopProcess) break;
-                
-                const endpoint = `/market/templates?type=${collectionType}&page=${page}&categoryId=${categoryId}&collectionIds=${collectionId}`;
-                
-                const response = await sendProxyRequest(endpoint, 'GET', headers);
-                
-                if (!response.success || !response.data) {
-                    break;
-                }
-                
-                // First page gives us total count
-                if (page === 1) {
-                    totalItems = response.data.total || 0;
-                    updateStatus(`Found ${totalItems} market listings for collection ${collectionId}`, 'blue');
-                }
-                
-                // Process templates on this page
-                if (response.data.templates && response.data.templates.length > 0) {
-                    response.data.templates.forEach(template => {
-                        const entityTemplateId = template.entityTemplateId;
-                        const lowestPrice = template.lowestPrice || '0.00';
-                        
-                        // Find the cardTemplate or stickerTemplate
-                        const templateData = template.cardTemplate || template.stickerTemplate;
-                        if (templateData && templateData.id) {
-                            // Extract new fields from 21.30
-                            const inCirculation = templateData.inCirculation !== undefined ? templateData.inCirculation : '';
-                            const minted = templateData.minted !== undefined ? templateData.minted : '';
-                            const templateTitle = templateData.title || '';
-                            const rarity = templateData.rarity || '';
-                            
-                            prices[templateData.id] = {
-                                price: lowestPrice,
-                                entityTemplateId: entityTemplateId,
-                                inCirculation: inCirculation,
-                                minted: minted,
-                                templateTitle: templateTitle,
-                                rarity: rarity
-                            };
-                        }
-                    });
-                    
-                    itemsProcessed += response.data.templates.length;
-                    
-                    // Update progress
-                    if (totalItems > 0) {
-                        const progress = Math.round((itemsProcessed / totalItems) * 100);
-                        updateStatus(`Fetching market data: ${itemsProcessed}/${totalItems} (${progress}%)`, 'blue');
-                    }
-                }
-                
-                // Check if we need to fetch more pages
-                const itemsPerPage = 40; // API limit per page
-                if (!response.data.templates || response.data.templates.length < itemsPerPage) {
-                    break;
-                }
-                
-                page++;
-                
-                // Small delay between requests to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-            
-            // Cache the results
-            marketPriceCache[cacheKey] = prices;
-            
-            updateStatus(`Loaded ${Object.keys(prices).length} market entries with extended data for collection ${collectionId}`, 'green');
-            return prices;
-            
-        } catch (error) {
-            console.error(`Error fetching market data for collection ${collectionId}:`, error);
-            // Return empty object if there's an error
-            marketPriceCache[cacheKey] = {};
-            return {};
-        }
-    }
-
-    // Add items to the existing table (updated with new columns from 21.30)
-    function addItemsToTable(items) {
-        const tableBody = document.getElementById('tableBody');
-        
-        // Add rows for each item
-        items.forEach(item => {
-            const row = document.createElement('tr');
-            
-            // Define fields order matching the new table headers
-            const fieldsToShow = [
-                'senderID', 'id', 'mintBatch', 'mintNumber', 'type', 'collectionId', 'templateTitle',
-                'templateId', 'lowestPrice', 'inCirculation', 'minted', 'fullTemplateTitle', 'rarity',
-                'marketTemplateId', 'status', 'ethStatus', 'isMarketList', 'acquired', 'rating'
-            ];
-            
-            fieldsToShow.forEach(field => {
-                const cell = document.createElement('td');
-                let value = item[field];
-                
-                // Format boolean values for better readability
-                if (typeof value === 'boolean') {
-                    value = value ? 'Yes' : 'No';
-                }
-                
-                // Format price with 2 decimal places
-                if (field === 'lowestPrice' && value !== '0.00' && value !== 'N/A') {
-                    value = parseFloat(value).toFixed(2);
-                }
-                
-                // For numeric fields that might be strings, display as is
-                if ((field === 'inCirculation' || field === 'minted') && (value === '' || value === undefined)) {
-                    value = 'N/A';
-                }
-                
-                cell.textContent = value !== null && value !== undefined ? value : 'N/A';
-                
-                // Color code the price column
-                if (field === 'lowestPrice') {
-                    if (value === '0.00' || value === 'N/A') {
-                        cell.style.color = '#999';
-                    } else if (parseFloat(value) < 1.0) {
-                        cell.style.color = 'green';
-                        cell.style.fontWeight = 'bold';
-                    } else if (parseFloat(value) > 10.0) {
-                        cell.style.color = 'red';
-                        cell.style.fontWeight = 'bold';
-                    }
-                }
-                
-                row.appendChild(cell);
+    // season "all" toggles
+    function bindSeasonAll(containerId, checkboxClass, allId) {
+        const allCb = $(allId);
+        if (!allCb) return;
+        allCb.addEventListener('change', function() {
+            document.querySelectorAll(`#${containerId} .${checkboxClass}`).forEach(c => c.checked = this.checked);
+        });
+        document.querySelectorAll(`#${containerId} .${checkboxClass}:not(#${allId})`).forEach(c => {
+            c.addEventListener('change', function() {
+                const all = document.querySelectorAll(`#${containerId} .${checkboxClass}:not(#${allId})`);
+                allCb.checked = Array.from(all).every(cb => cb.checked);
             });
-            
-            tableBody.appendChild(row);
         });
     }
+    bindSeasonAll('seasonCheckboxes', 'season-cs', 'seasonAllCS');
+    bindSeasonAll('seasonKLCheckboxes', 'season-kl', 'seasonAllKL');
 
-    // Function to send request through proxy
-    async function sendProxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
-        try {
-            const response = await fetch('/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    endpoint: endpoint,
-                    method: method,
-                    headers: headers,
-                    data: data,
-                }),
-            });
+    // mint batch toggle
+    $('filterMintBatch').addEventListener('change', function() {
+        $('mintBatchInput').style.display = this.checked ? 'inline-block' : 'none';
+    });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Proxy request failed:', error);
-            throw error;
-        }
+    // ----- NETWORK (proxy) -----
+    async function proxyRequest(endpoint, method='GET', headers={}, data=null) {
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint, method, headers, data })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
     }
 
-    // Start trading process
-    async function startTrading() {
-        if (isPaused) return;
-        
-        // Reset state
-        stopProcess = false;
-        isPaused = false;
-        document.getElementById('stopButton').disabled = false;
-        document.getElementById('startButton').disabled = true;
-        document.getElementById('tradeButton').disabled = true;
-        document.getElementById('progressBar').style.width = '0%';
-        
-        updateStatus('Starting trading process...', 'blue');
-        
-        try {
-            // Get game type
-            const gameType = document.querySelector('input[name="gameType"]:checked').value;
-            
-            // Process each account sequentially
-            for (currentAccountIndex = 0; currentAccountIndex < accountPairs.length; currentAccountIndex++) {
-                if (stopProcess) break;
-                
-                const pair = accountPairs[currentAccountIndex];
-                await tradeAccountItems(pair.token, pair.senderID, pair.receiverID, gameType);
-                
-                // Update progress
-                document.getElementById('progressBar').style.width = `${((currentAccountIndex + 1) / accountPairs.length) * 100}%`;
-                updateStats();
-                
-                // Add delay between accounts unless it's the last one
-                if (currentAccountIndex < accountPairs.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, requestDelay));
-                }
-            }
-            
-            if (!stopProcess) {
-                updateStatus(`Trading completed successfully! Processed ${tradeCounter} trades`, 'green');
-            }
-        } catch (error) {
-            updateStatus(`Error during trading: ${error.message}`, 'red');
-        } finally {
-            document.getElementById('startButton').disabled = false;
-            document.getElementById('tradeButton').disabled = false;
-            document.getElementById('stopButton').disabled = true;
-        }
-    }
+    // ----- FETCH COLLECTIONS (with KL support + default exclusions) -----
+    async function getCollections(authToken, senderID, included, extraExcluded, gameType, seasons) {
+        const headers = { 'Content-Type': 'application/json', 'x-user-jwt': authToken };
+        const result = [];
+        const seasonArray = (gameType === '2') ? [''] : seasons;
+        const excludedSet = new Set(DEFAULT_EXCLUDED);
+        for (const id of extraExcluded) excludedSet.add(id);
 
-    async function tradeAccountItems(authToken, senderID, receiverID, gameType) {
-        updateStatus(`Processing trades for account ${currentAccountIndex + 1} (Sender: ${senderID} → Receiver: ${receiverID})`, 'blue');
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'x-user-jwt': authToken
-        };
-
-        try {
-            // Get items only for this account
-            const accountData = accountItems[senderID] || { filteredItems: [] };
-            const itemsForTrading = accountData.filteredItems
-                .filter(item => item !== null) // Just in case
-                .map(item => ({
-                    id: item.id,
-                    type: item.type,
-                    mintNumber: item.mintNumber
-                }));
-            
-            if (itemsForTrading.length === 0) {
-                updateStatus(`No items found for trading - skipping account ${senderID}`, 'orange');
-                return; // Skip this account as there are no items to trade
-            }
-            
-            updateStatus(`Found ${itemsForTrading.length} items for trading`, 'blue');
-            
-            // Split into chunks
-            const chunks = [];
-            for (let i = 0; i < itemsForTrading.length; i += tradeChunkSize) {
-                chunks.push(itemsForTrading.slice(i, i + tradeChunkSize));
-            }
-
-            const totalTrades = chunks.length;
-            updateStatus(`Creating ${totalTrades} trades (${tradeChunkSize} items each)`, 'blue');
-            
-            // Process in batches
-            for (let i = 0; i < chunks.length; i += batchSize) {
-                if (stopProcess || isPaused) break;
-                
-                const batch = chunks.slice(i, i + batchSize);
-                const promises = batch.map(chunk => createTrade(headers, receiverID, chunk, gameType));
-                
-                const results = await Promise.all(promises);
-                results.forEach((result, index) => {
-                    tradeCounter++;
-                    if (!result.success) {
-                        updateStatus(`Trade ${i + index + 1} failed: ${result.error}`, 'orange');
+        for (const season of seasonArray) {
+            if (stopFlag) break;
+            let url = `/collections/users/${senderID}/user-summary?categoryId=${gameType}`;
+            if (season) url += `&seasons=${encodeURIComponent(season)}`;
+            try {
+                const resp = await proxyRequest(url, 'GET', headers);
+                if (resp.data) {
+                    for (const item of resp.data) {
+                        if (item.count === 0) continue;
+                        const coll = item.collection;
+                        if (!coll || coll.properties?.tiers?.includes('Loadout')) continue;
+                        const id = coll.id;
+                        if (included.length && !included.includes(id)) continue;
+                        if (excludedSet.has(id)) continue;
+                        const type = coll.properties?.entity_types?.[0] || 'card';
+                        if (!result.some(c => c.id === id)) {
+                            result.push({ id, type });
+                        }
                     }
-                });
-
-                // Progress update
-                if ((i + batchSize) % 70 === 0 || (i + batchSize) >= chunks.length) {
-                    const progress = Math.min(i + batchSize, chunks.length);
-                    const percentage = Math.round((progress/chunks.length)*100);
-                    updateStatus(`Processed ${progress}/${chunks.length} trades (${percentage}%)`, 'blue');
                 }
+            } catch (e) { console.warn('season fetch error', e); }
+        }
+        return result;
+    }
 
-                // Delay between batches unless paused
-                if (i + batchSize < chunks.length && !isPaused && !stopProcess) {
-                    await new Promise(resolve => setTimeout(resolve, requestDelay));
+    // ----- FETCH ITEMS + MARKET DATA -----
+    async function fetchMarketPrices(authToken, collectionId, collType, categoryId) {
+        const cacheKey = `${collectionId}_${collType}`;
+        if (marketCache[cacheKey]) return marketCache[cacheKey];
+        const headers = { 'Content-Type': 'application/json', 'x-user-jwt': authToken };
+        const prices = {};
+        let page = 1;
+        try {
+            while (true) {
+                if (stopFlag) break;
+                const url = `/market/templates?type=${collType}&page=${page}&categoryId=${categoryId}&collectionIds=${collectionId}`;
+                const resp = await proxyRequest(url, 'GET', headers);
+                if (!resp.success || !resp.data) break;
+                const templates = resp.data.templates || [];
+                for (const t of templates) {
+                    const templateData = t.cardTemplate || t.stickerTemplate;
+                    if (!templateData) continue;
+                    const tid = templateData.id;
+                    if (!tid) continue;
+                    prices[tid] = {
+                        price: t.lowestPrice || '0.00',
+                        entityTemplateId: t.entityTemplateId,
+                        inCirculation: templateData.inCirculation ?? '',
+                        minted: templateData.minted ?? '',
+                        templateTitle: templateData.title || '',
+                        rarity: templateData.rarity || ''
+                    };
                 }
+                if (templates.length < 40) break;
+                page++;
+                await new Promise(r => setTimeout(r, 400));
             }
-            
-            updateStatus(`Completed ${tradeCounter} trades for account ${senderID}`, 'green');
-        } catch (error) {
-            updateStatus(`Error trading items for account ${senderID}: ${error.message}`, 'red');
-            throw error;
+        } catch (e) { console.warn('market fetch error', e); }
+        marketCache[cacheKey] = prices;
+        return prices;
+    }
+
+    async function getCollectionItems(authToken, senderID, collectionId, collType, categoryId) {
+        const headers = { 'Content-Type': 'application/json', 'x-user-jwt': authToken };
+        const itemsUrl = `/collections/${collectionId}/users/${senderID}/owned2`;
+        const templatesUrl = collType === 'sticker'
+            ? `/collections/${collectionId}/sticker-templates`
+            : `/collections/${collectionId}/card-templates`;
+
+        let templateMap = {};
+        try {
+            const tresp = await proxyRequest(templatesUrl, 'GET', headers);
+            if (tresp?.data) {
+                tresp.data.forEach(t => { templateMap[t.id] = { title: t.title, id: t.id }; });
+            }
+        } catch (e) {}
+
+        await fetchMarketPrices(authToken, collectionId, collType, categoryId);
+        const cacheKey = `${collectionId}_${collType}`;
+        const marketData = marketCache[cacheKey] || {};
+
+        const resp = await proxyRequest(itemsUrl, 'GET', headers);
+        const items = (collType === 'sticker') ? (resp?.data?.stickers || []) : (resp?.data?.cards || []);
+        const out = [];
+        const seen = new Set();
+        for (const item of items) {
+            const key = item.id || JSON.stringify(item);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const templateId = collType === 'sticker' ? item.stickerTemplateId : item.cardTemplateId;
+            const tInfo = templateId ? templateMap[templateId] : { title: 'Unknown', id: 'N/A' };
+            const mInfo = (templateId && marketData[templateId]) ? marketData[templateId] : null;
+            const processed = {
+                senderID,
+                id: item.id,
+                mintBatch: item.mintBatch,
+                mintNumber: item.mintNumber,
+                type: collType,
+                collectionId,
+                templateTitle: tInfo.title || 'Unknown',
+                templateId: templateId || 'N/A',
+                status: item.status || 'N/A',
+                ethStatus: item.ethStatus || 'N/A',
+                isMarketList: item.isMarketList === true ? 'Yes' : 'No',
+                acquired: (item.history?.find(h => h.type==='pack')?.created) || 'N/A',
+                rating: item.rating || 'N/A',
+                lowestPrice: mInfo ? mInfo.price : '0.00',
+                marketTemplateId: item.marketId || 'noList',
+                inCirculation: mInfo ? mInfo.inCirculation : '',
+                minted: mInfo ? mInfo.minted : '',
+                fullTemplateTitle: mInfo ? mInfo.templateTitle : '',
+                rarity: mInfo ? mInfo.rarity : ''
+            };
+            out.push(processed);
+        }
+        return out;
+    }
+
+    // ----- PROCESS ACCOUNT -----
+    async function processAccount(authToken, senderID, minMint, maxMint, mintBatch, included, extraExcluded,
+                                  hideImx, hideMkt, hideBundle, gameType, seasons) {
+        updateStatus(`Processing ${senderID} ...`, '#2563eb');
+        if (!accountItems[senderID]) accountItems[senderID] = { allItems: [], filteredItems: [] };
+
+        const collections = await getCollections(authToken, senderID, included, extraExcluded, gameType, seasons);
+        if (stopFlag) return;
+        updateStatus(`Found ${collections.length} collections for ${senderID}`, '#2563eb');
+
+        for (const coll of collections) {
+            if (stopFlag) break;
+            const items = await getCollectionItems(authToken, senderID, coll.id, coll.type, gameType);
+            if (!items || !items.length) continue;
+            const filtered = items.filter(it => {
+                if (minMint !== null && it.mintNumber < minMint) return false;
+                if (maxMint !== null && it.mintNumber > maxMint) return false;
+                if (mintBatch && it.mintBatch !== mintBatch) return false;
+                if (hideImx && it.status === 'imx_locked') return false;
+                if (hideMkt && it.status === 'market') return false;
+                if (hideBundle && it.status === 'bundle') return false;
+                return true;
+            });
+            accountItems[senderID].allItems.push(...items);
+            accountItems[senderID].filteredItems.push(...filtered);
+            addItemsToTable(filtered);
         }
     }
 
+    // ----- MAIN SCAN (with multi JWT logic) -----
+    async function fetchCollectionItems() {
+        if (stopFlag) return;
+        stopFlag = false;
+        stopBtn.disabled = false; startBtn.disabled = true; tradeBtn.disabled = true; downBtn.disabled = true;
+        tableBody.innerHTML = '';
+        progressBar.style.width = '0%';
+        accountItems = {}; accountPairs = []; tradeCounter = 0; marketCache = {};
+        updateStats();
+
+        try {
+            const included = $('includedCollections').value.trim().split(',').map(s => parseInt(s.trim())).filter(Boolean);
+            const extraExcluded = $('excludedCollections').value.trim().split(',').map(s => parseInt(s.trim())).filter(Boolean);
+            const minMint = $('minMint').value.trim() ? parseInt($('minMint').value) : null;
+            const maxMint = $('maxMint').value.trim() ? parseInt($('maxMint').value) : null;
+            const filterBatch = $('filterMintBatch').checked;
+            const mintBatch = filterBatch ? $('mintBatchInput').value.trim().toUpperCase() : null;
+            const hideImx = $('hideImxLocked').checked;
+            const hideMkt = $('hideMarketListed').checked;
+            const hideBundle = $('hideBundleItems').checked;
+            const gameType = document.querySelector('input[name="gameType"]:checked').value;
+
+            let seasons = [];
+            if (gameType === '1') {
+                seasons = Array.from(document.querySelectorAll('.season-cs:checked:not(#seasonAllCS)'))
+                    .map(cb => cb.id.replace('season', '').replace('Founders', 'Founders+Edition'));
+            } else if (gameType === '73') {
+                seasons = Array.from(document.querySelectorAll('.season-kl:checked:not(#seasonAllKL)'))
+                    .map(cb => {
+                        const map = {
+                            'season2023_24': '2023-24',
+                            'season2024_25': '2024-25',
+                            'season2025_26': '2025-26',
+                            'season2026_27': '2026-27'
+                        };
+                        return map[cb.id] || cb.id.replace('season', '');
+                    });
+            }
+
+            const useMulti = document.getElementById('multi-tab').classList.contains('active');
+            if (useMulti) {
+                let tokens = $('authTokensTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
+                let senders = $('senderIDsTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
+                let receivers = $('receiverIDsTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+                if (!tokens.length || !senders.length) {
+                    updateStatus('Auth tokens and Sender IDs required', 'red'); return;
+                }
+
+                // if only one token, use it for all senders
+                if (tokens.length === 1 && senders.length > 1) {
+                    const singleToken = tokens[0];
+                    tokens = senders.map(() => singleToken);
+                }
+
+                // ensure token count matches sender count
+                if (tokens.length !== senders.length) {
+                    updateStatus(`Token count (${tokens.length}) must match Sender count (${senders.length}) or be 1`, 'red');
+                    return;
+                }
+
+                // if receivers empty, just use empty strings (no trading)
+                if (receivers.length === 0) {
+                    receivers = senders.map(() => '');
+                } else if (receivers.length === 1 && senders.length > 1) {
+                    const singleRecv = receivers[0];
+                    receivers = senders.map(() => singleRecv);
+                } else if (receivers.length !== senders.length) {
+                    updateStatus(`Receiver count (${receivers.length}) must match Sender count (${senders.length}) or be 0/1`, 'red');
+                    return;
+                }
+
+                accountPairs = tokens.map((t,i) => ({
+                    token: t,
+                    senderID: senders[i],
+                    receiverID: receivers[i] || ''
+                }));
+            } else {
+                const token = $('authToken').value.trim();
+                const sender = $('senderID').value.trim();
+                const receiver = $('receiverID').value.trim() || '';
+                if (!token || !sender) { updateStatus('Auth & Sender required', 'red'); return; }
+                accountPairs = [{ token, senderID: sender, receiverID: receiver }];
+            }
+
+            updateStatus(`Processing ${accountPairs.length} account(s)`, '#2563eb');
+            for (let i=0; i<accountPairs.length; i++) {
+                if (stopFlag) break;
+                currentAccountIdx = i;
+                const p = accountPairs[i];
+                await processAccount(p.token, p.senderID, minMint, maxMint, mintBatch, included, extraExcluded,
+                                     hideImx, hideMkt, hideBundle, gameType, seasons);
+                progressBar.style.width = `${((i+1)/accountPairs.length)*100}%`;
+                updateStats();
+                if (i < accountPairs.length-1) await new Promise(r => setTimeout(r, 1200));
+            }
+
+            if (!stopFlag) {
+                const totalFiltered = Object.values(accountItems).reduce((sum,a) => sum + a.filteredItems.length, 0);
+                updateStatus(`✅ Done! ${totalFiltered} items found`, '#16a34a');
+                tradeBtn.disabled = false; downBtn.disabled = false;
+            }
+        } catch (e) {
+            updateStatus(`❌ ${e.message}`, 'red');
+        } finally {
+            startBtn.disabled = false; stopBtn.disabled = true;
+        }
+    }
+
+    // ----- TRADING (only if receiverID provided) -----
     async function createTrade(headers, receiverID, items, gameType) {
+        if (!receiverID) return { success: false, error: 'No receiver' };
         const endpoint = `/trade/create-offer?categoryId=${gameType}`;
-        
-        const response = await sendProxyRequest(endpoint, 'POST', headers, {
+        const payload = {
             user2Id: receiverID,
             user1Balance: 0,
             user2Balance: 0,
-            entities: items.map(item => ({ id: item.id, type: item.type }))
-        });
-        
-        return { success: response.success, error: response.error };
+            entities: items.map(it => ({ id: it.id, type: it.type }))
+        };
+        try {
+            const resp = await proxyRequest(endpoint, 'POST', headers, payload);
+            return { success: resp.success, error: resp.error };
+        } catch (e) { return { success: false, error: e.message }; }
     }
 
-    function stopScript() {
-        stopProcess = true;
-        document.getElementById('stopButton').disabled = true;
-        document.getElementById('startButton').disabled = false;
-        document.getElementById('tradeButton').disabled = false;
-        updateStatus("Process stopped by user", 'orange');
+    async function tradeAccountItems(authToken, senderID, receiverID, gameType) {
+        if (!receiverID) { updateStatus(`⏭ no receiver for ${senderID}`, '#f59e0b'); return; }
+        const data = accountItems[senderID] || { filteredItems: [] };
+        const items = data.filteredItems.map(it => ({ id: it.id, type: it.type }));
+        if (!items.length) { updateStatus(`⏭ no items for ${senderID}`, '#f59e0b'); return; }
+        const chunks = [];
+        for (let i=0; i<items.length; i+=TRADE_CHUNK) chunks.push(items.slice(i, i+TRADE_CHUNK));
+        updateStatus(`➡️ ${senderID} → ${receiverID}  (${chunks.length} trades)`, '#2563eb');
+
+        const headers = { 'Content-Type': 'application/json', 'x-user-jwt': authToken };
+        for (let i=0; i<chunks.length; i+=BATCH_SIZE) {
+            if (stopFlag) break;
+            const batch = chunks.slice(i, i+BATCH_SIZE);
+            const results = await Promise.all(batch.map(chunk => createTrade(headers, receiverID, chunk, gameType)));
+            tradeCounter += results.length;
+            updateStats();
+            if (i + BATCH_SIZE < chunks.length && !stopFlag) await new Promise(r => setTimeout(r, REQUEST_DELAY));
+        }
     }
 
-    // Update status message
-    function updateStatus(message, color = 'black') {
-        const statusElement = document.getElementById('statusMessage');
-        statusElement.textContent = message;
-        statusElement.style.color = color;
-        console.log(message);
-    }
+    async function startTrading() {
+        if (stopFlag) return;
+        stopFlag = false;
+        stopBtn.disabled = false; startBtn.disabled = true; tradeBtn.disabled = true;
+        progressBar.style.width = '0%';
+        updateStatus('🔄 Trading started', '#2563eb');
 
-    // Download data as CSV (updated with new columns from 21.30)
-    function downloadData() {
-        // Combine all filtered items from all accounts
-        let itemsToDownload = [];
-        for (const senderID in accountItems) {
-            if (accountItems[senderID].filteredItems.length > 0) {
-                itemsToDownload = itemsToDownload.concat(accountItems[senderID].filteredItems);
+        const gameType = document.querySelector('input[name="gameType"]:checked').value;
+        try {
+            for (let i=0; i<accountPairs.length; i++) {
+                if (stopFlag) break;
+                const p = accountPairs[i];
+                await tradeAccountItems(p.token, p.senderID, p.receiverID, gameType);
+                progressBar.style.width = `${((i+1)/accountPairs.length)*100}%`;
+                if (i < accountPairs.length-1) await new Promise(r => setTimeout(r, REQUEST_DELAY));
             }
-        }
-        
-        if (itemsToDownload.length === 0) {
-            updateStatus('No data to download', 'red');
-            return;
-        }
-        
-        let csvContent = '';
-        
-        // Add headers - updated with new columns
-        const headers = [
-            'senderID', 'id', 'mintBatch', 'mintNumber', 'type', 'collectionId', 'templateTitle',
-            'templateId', 'lowestPrice', 'inCirculation', 'minted', 'fullTemplateTitle', 'rarity',
-            'marketTemplateId', 'status', 'ethStatus', 'isMarketList', 'acquired', 'rating'
-        ];
-        csvContent += headers.join(',') + '\n';
-        
-        // Add data rows
-        itemsToDownload.forEach(item => {
-            const row = headers.map(header => {
-                let value = item[header];
-                // Format boolean values
-                if (typeof value === 'boolean') {
-                    value = value ? 'Yes' : 'No';
-                }
-                // Format price with 2 decimal places
-                if (header === 'lowestPrice' && value !== '0.00' && value !== 'N/A') {
-                    value = parseFloat(value).toFixed(2);
-                }
-                // Escape quotes and wrap in quotes if contains comma
-                if (typeof value === 'string' && value.includes(',')) {
-                    value = `"${value.replace(/"/g, '""')}"`;
-                }
-                return value !== null && value !== undefined ? value : '';
-            });
-            csvContent += row.join(',') + '\n';
-        });
-        
-        // Create download link
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        const currentDate = new Date();
-        const formattedDate = `${currentDate.getFullYear()}.${(currentDate.getMonth()+1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}`;
-        link.download = `collection_items_${formattedDate}.csv`;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            if (!stopFlag) updateStatus(`✅ Trading done (${tradeCounter} trades)`, '#16a34a');
+        } catch (e) { updateStatus(`❌ ${e.message}`, 'red'); }
+        finally { startBtn.disabled = false; tradeBtn.disabled = false; stopBtn.disabled = true; }
     }
+
+    // ----- DOWNLOAD CSV -----
+    function downloadData() {
+        let flat = [];
+        for (const s in accountItems) flat.push(...accountItems[s].filteredItems);
+        if (!flat.length) { updateStatus('No data to export', 'red'); return; }
+        const headers = ['senderID','id','mintBatch','mintNumber','type','collectionId','templateTitle',
+            'templateId','lowestPrice','inCirculation','minted','fullTemplateTitle','rarity',
+            'marketTemplateId','status','ethStatus','isMarketList','acquired','rating'];
+        let csv = headers.join(',') + '\n';
+        for (const row of flat) {
+            const vals = headers.map(h => {
+                let v = row[h] ?? '';
+                if (typeof v === 'boolean') v = v ? 'Yes' : 'No';
+                if (h === 'lowestPrice' && v !== '0.00' && v !== 'N/A' && v) v = parseFloat(v).toFixed(2);
+                if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) v = `"${v.replace(/"/g,'""')}"`;
+                return v;
+            });
+            csv += vals.join(',') + '\n';
+        }
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `kolex_items_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ----- EVENTS -----
+    startBtn.addEventListener('click', fetchCollectionItems);
+    stopBtn.addEventListener('click', () => { stopFlag = true; stopBtn.disabled = true; startBtn.disabled = false; updateStatus('⏹ Stopped by user', '#f59e0b'); });
+    tradeBtn.addEventListener('click', startTrading);
+    downBtn.addEventListener('click', downloadData);
+
+    // initial visibility
+    document.querySelector('input[name="gameType"][value="1"]').dispatchEvent(new Event('change'));
+
+    // nav loader (if exists)
+    fetch('/nav-loader.js').then(r => r.text()).then(script => {
+        if (script && !script.includes('404')) {
+            const s = document.createElement('script'); s.textContent = script; document.head.appendChild(s);
+        }
+    }).catch(() => {});
 </script>
 </body>
 </html>
