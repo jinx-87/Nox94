@@ -478,34 +478,60 @@
             }
         }
         
-        // Buy packs
-        async function buyPacks(authToken, packTemplateId, amount) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'x-user-jwt': authToken
-            };
-            
-            const endpoint = '/packs/buy';
-            const data = {
-                packTemplateId: packTemplateId,
-                amount: amount
-            };
-            
-            try {
-                const response = await sendProxyRequest(endpoint, 'POST', headers, data);
-                
-                if (!response || !Array.isArray(response)) {
-                    throw new Error('Invalid response from buy endpoint');
+// Buy packs
+async function buyPacks(authToken, packTemplateId, amount) {
+    const headers = {
+        'Content-Type': 'application/json',
+        'x-user-jwt': authToken
+    };
+    
+    const endpoint = '/packs/buy';
+    const data = {
+        packTemplateId: packTemplateId,
+        amount: amount
+    };
+    
+    try {
+        const response = await sendProxyRequest(endpoint, 'POST', headers, data);
+        
+        // Check for success wrapper
+        let packs = response;
+        if (response && response.success === true && Array.isArray(response.data)) {
+            packs = response.data;
+        } else if (response && response.success === true && response.data && response.data.data && Array.isArray(response.data.data)) {
+            // Handle nested data structure
+            packs = response.data.data;
+        } else if (!Array.isArray(response)) {
+            // If it's not an array, try to find the array in the response
+            if (response && typeof response === 'object') {
+                // Try common patterns
+                if (Array.isArray(response.data)) {
+                    packs = response.data;
+                } else if (response.data && Array.isArray(response.data.packs)) {
+                    packs = response.data.packs;
+                } else if (response.packs && Array.isArray(response.packs)) {
+                    packs = response.packs;
+                } else {
+                    throw new Error('Invalid response from buy endpoint - no array found');
                 }
-                
-                // Extract pack IDs from response
-                const packIds = response.map(item => item.id);
-                return packIds;
-            } catch (error) {
-                console.error('Error buying packs:', error);
-                throw error;
+            } else {
+                throw new Error('Invalid response from buy endpoint');
             }
         }
+        
+        // Ensure we have an array
+        if (!Array.isArray(packs)) {
+            throw new Error('Response is not an array');
+        }
+        
+        // Extract pack IDs from the response
+        const packIds = packs.map(item => item.id);
+        return packIds;
+    } catch (error) {
+        console.error('Error buying packs:', error);
+        throw error;
+    }
+}
         
         // Open a single pack
         async function openPack(authToken, packId) {
