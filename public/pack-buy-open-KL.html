@@ -743,7 +743,7 @@ async function buyPacks(authToken, packTemplateId, amount) {
                     const totalForUser = allPackIds.length;
                     const batchInfo = `Batch ${Math.floor(i / MAX_BATCH_SIZE) + 1}/${batches.length} | Pack ${packNumber}/${totalForUser}`;
                     
-                    addLog(`[User ${userIndex + 1}] Opening pack ${packNumber}/${totalForUser} (ID: ${packId})...`, 'info');
+                    //addLog(`[User ${userIndex + 1}] Opening pack ${packNumber}/${totalForUser} (ID: ${packId})...`, 'info');
                     
                     try {
                         const result = await openPack(jwt, packId);
@@ -751,8 +751,8 @@ async function buyPacks(authToken, packTemplateId, amount) {
                         if (result && result.success) {
                             const mintNumbers = formatMintNumbers(result);
                             openedPacks++;
-                            addLog(`[User ${userIndex + 1}] ✅ Pack ${packId} opened: ${mintNumbers}`, 'success');
-                            addResult(userIndex, packId, true, mintNumbers, null, batchInfo);
+                            //addLog(`[User ${userIndex + 1}] ✅ Pack ${packId} opened: ${mintNumbers}`, 'success');
+                            //addResult(userIndex, packId, true, mintNumbers, null, batchInfo);
                         } else {
                             const errorMsg = result?.error || 'Unknown error';
                             failedPacks++;
