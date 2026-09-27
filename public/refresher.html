@@ -260,6 +260,7 @@
     // ================= CONFIG =================
     const PROXY_URL = '/proxy';
     const REFRESH_ENDPOINT = 'https://api.kolex.gg/api/v1/auth/refresh-jwt';
+    const USER_ENDPOINT = 'https://api.kolex.gg/api/v1/user/info';
     const FUNDS_ENDPOINT = 'https://api.kolex.gg/api/v1/user/funds';
 
     // ================= STATE =================
@@ -337,10 +338,12 @@
     }
 
     // ================= REFRESH JWT =================
+    // Sends the refresh token BOTH as the payload AND as x-user-jwt header
+    // (per spec: header value = the refresh token itself)
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
-            //'x-user-jwt': 'undefined' // some endpoints need this; refresh usually doesn't
+            'x-user-jwt': refreshToken
         };
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
@@ -348,40 +351,74 @@
         // Handle various response shapes
         let data = resp;
         if (data && data.data && data.data.data) data = data.data; // unwrap proxy
+
+        // Shape: { data: { jwt, refreshToken, ... } }
         if (data && data.data && data.data.jwt) {
             return {
                 jwt: data.data.jwt,
-                refreshToken: data.data.refreshToken || refreshToken,
-                user: data.data.user || {}
+                refreshToken: data.data.refreshToken || refreshToken
             };
         }
+        // Shape: { jwt, refreshToken, ... }
         if (data && data.jwt) {
             return {
                 jwt: data.jwt,
-                refreshToken: data.refreshToken || refreshToken,
-                user: data.user || {}
+                refreshToken: data.refreshToken || refreshToken
             };
         }
         throw new Error('No JWT in refresh response: ' + JSON.stringify(resp).slice(0, 300));
     }
 
+    // ================= FETCH USER INFO =================
+    // Returns { userId, username, kyc, silvercoins, usd, coronas }
+    async function fetchUserInfo(jwt) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'x-user-jwt': jwt
+        };
+        const resp = await proxyRequest(USER_ENDPOINT, 'GET', headers, null);
+
+        let data = resp;
+        if (data && data.data && data.data.data) data = data.data; // unwrap proxy
+        const user = data?.data || data;
+
+        if (!user || typeof user !== 'object') {
+            throw new Error('Unexpected /user/ response: ' + JSON.stringify(resp).slice(0, 300));
+        }
+
+        return {
+            userId: user.id ?? '—',
+            username: user.username ?? '—',
+            kyc: user.kycCompleted,
+            // These may exist directly on the user object too
+            silvercoins: user.silvercoins ?? null,
+            usd: user.usd ?? null,
+            coronas: user.coronas ?? null
+        };
+    }
+
     // ================= FETCH FUNDS =================
+    // Returns { silvercoins, coronas, usd }
     async function fetchFunds(jwt) {
         const headers = {
             'Content-Type': 'application/json',
             'x-user-jwt': jwt
         };
         const resp = await proxyRequest(FUNDS_ENDPOINT, 'GET', headers, null);
+
         let data = resp;
         if (data && data.data && data.data.data) data = data.data; // unwrap
-        if (data && data.data) {
-            return {
-                silvercoins: data.data.silvercoins || 0,
-                coronas: data.data.coronas || 0,
-                usd: data.data.usd || '0'
-            };
+        const funds = data?.data || data;
+
+        if (!funds || typeof funds !== 'object') {
+            return { silvercoins: null, coronas: null, usd: null };
         }
-        return { silvercoins: 0, coronas: 0, usd: '0' };
+
+        return {
+            silvercoins: funds.silvercoins ?? null,
+            coronas: funds.coronas ?? null,
+            usd: funds.usd ?? null
+        };
     }
 
     // ================= TABLE =================
@@ -495,20 +532,41 @@
             const index = i;
 
             try {
-                // 1) Refresh JWT
+                // 1) Refresh JWT (header x-user-jwt = refresh token)
                 addLog(`[${i + 1}/${totalTokens}] Refreshing JWT...`, 'info');
                 const refreshResult = await refreshJWT(refreshToken);
                 const jwt = refreshResult.jwt;
-                const user = refreshResult.user || {};
-                const userId = user.id || '—';
-                const username = user.username || '—';
-                const kyc = user.kycCompleted;
 
-                // 2) Fetch funds using new JWT
-                addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
-                let funds = { silvercoins: 0, coronas: 0, usd: '0' };
+                // 2) Fetch user info with the new JWT
+                addLog(`[${i + 1}/${totalTokens}] Fetching user info...`, 'info');
+                let userInfo = {
+                    userId: '—',
+                    username: '—',
+                    kyc: null,
+                    silvercoins: null,
+                    usd: null,
+                    coronas: null
+                };
                 try {
-                    funds = await fetchFunds(jwt);
+                    userInfo = await fetchUserInfo(jwt);
+                } catch (userErr) {
+                    addLog(`  ⚠ User info fetch failed: ${userErr.message}`, 'warning');
+                }
+
+                // 3) Fetch funds with the new JWT
+                addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
+                let funds = {
+                    silvercoins: userInfo.silvercoins,
+                    coronas: userInfo.coronas,
+                    usd: userInfo.usd
+                };
+                try {
+                    const f = await fetchFunds(jwt);
+                    funds = {
+                        silvercoins: f.silvercoins ?? userInfo.silvercoins,
+                        coronas: f.coronas ?? userInfo.coronas,
+                        usd: f.usd ?? userInfo.usd
+                    };
                 } catch (fundsErr) {
                     addLog(`  ⚠ Funds fetch failed: ${fundsErr.message}`, 'warning');
                 }
@@ -517,9 +575,9 @@
                     index,
                     refreshToken,
                     jwt,
-                    userId,
-                    username,
-                    kyc,
+                    userId: userInfo.userId,
+                    username: userInfo.username,
+                    kyc: userInfo.kyc,
                     coronas: funds.coronas,
                     usd: funds.usd,
                     silvercoins: funds.silvercoins,
@@ -530,7 +588,11 @@
                 addRowToTable(record);
 
                 successCount++;
-                addLog(`  ✓ User: ${username} | ID: ${userId} | KYC: ${kyc} | Coronas: ${funds.coronas} | USD: ${funds.usd} | Silver: ${funds.silvercoins}`, 'success');
+                addLog(
+                    `  ✓ User: ${userInfo.username} | ID: ${userInfo.userId} | KYC: ${userInfo.kyc}` +
+                    ` | Coronas: ${funds.coronas} | USD: ${funds.usd} | Silver: ${funds.silvercoins}`,
+                    'success'
+                );
             } catch (err) {
                 const record = {
                     index,
