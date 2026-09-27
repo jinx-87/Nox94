@@ -330,7 +330,7 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             url: url,          // matches 717 proxy
-            endpoint: url,     // matches lister/scanner proxy
+            //endpoint: url,     // matches lister/scanner proxy
             method: method,
             headers: headers,
             data: data
