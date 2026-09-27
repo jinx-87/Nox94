@@ -14,32 +14,6 @@
             background: #f4f6fa;
             color: #1e293b;
         }
-        .nav-bar {
-            background: white;
-            padding: 12px 24px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .nav-links { display: flex; gap: 12px; flex-wrap: wrap; }
-        .nav-link {
-            padding: 6px 18px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            background: #f1f5f9;
-            color: #1e293b;
-            transition: 0.2s;
-        }
-        .nav-link.active { background: #2563eb; color: white; }
-        .nav-link:hover:not(.active) { background: #e2e8f0; }
-        .server-info { font-size: 0.75rem; color: #64748b; background: #f8fafc; padding: 4px 12px; border-radius: 30px; }
-
         h1 { font-weight: 600; font-size: 1.8rem; letter-spacing: -0.02em; margin: 0 0 8px 0; display: flex; align-items: center; gap: 10px; }
         .sub { font-weight: 400; color: #475569; font-size: 1rem; }
 
@@ -66,6 +40,13 @@
             resize: vertical;
         }
         textarea:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        input[type="number"] {
+            padding: 8px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            width: 110px;
+        }
 
         .stats-panel {
             display: grid;
@@ -199,8 +180,6 @@
     </style>
 </head>
 <body>
-    <div id="nav-placeholder"></div>
-
     <h1>🔑 JWT Refresh + Funds <span class="sub">· Kolex</span></h1>
 
     <div class="config-section">
@@ -210,7 +189,7 @@
         </div>
         <div class="input-group">
             <label for="delayInput">Delay (ms):</label>
-            <input type="number" id="delayInput" value="1500" style="width:110px; padding:8px 14px; border:1px solid #d1d9e6; border-radius:12px; font-size:0.9rem;">
+            <input type="number" id="delayInput" value="1500" min="0">
         </div>
     </div>
 
@@ -258,10 +237,10 @@
 
 <script>
     // ================= CONFIG =================
-    // Use RELATIVE paths — the /proxy prefixes the base URL itself
+    // IMPORTANT: These are RELATIVE paths. The /proxy endpoint on the server
+    // prepends API_BASE (env var) to build the full URL — exactly like lister.html.
     const PROXY_URL         = '/proxy';
     const REFRESH_ENDPOINT  = '/api/v1/auth/refresh-jwt';
-    const USER_ENDPOINT     = '/api/v1/user/info';
     const FUNDS_ENDPOINT    = '/api/v1/user/funds';
 
     // ================= STATE =================
@@ -288,13 +267,11 @@
     const delayInput = $('delayInput');
 
     // ================= HELPERS =================
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     function getDelay() {
-        const val = parseInt(delayInput.value, 10);
-        return isNaN(val) || val < 0 ? 1500 : val;
+        const v = parseInt(delayInput.value, 10);
+        return isNaN(v) || v < 0 ? 1500 : v;
     }
 
     function updateStatus(msg, color = '#1e293b') {
@@ -325,9 +302,8 @@
     }
 
     // ================= PROXY REQUEST =================
-    // IMPORTANT: send `endpoint` (relative path only) — this is what
-    // the existing /proxy expects. Sending a full URL or the `url` key
-    // returns "Not Found" / "Endpoint is required".
+    // Same shape as lister.html: { endpoint, method, headers, data }
+    // Server does: url = API_BASE + endpoint
     async function proxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
         const res = await fetch(PROXY_URL, {
             method: 'POST',
@@ -339,14 +315,25 @@
                 data: data
             })
         });
+
+        let payload = null;
+        try { payload = await res.json(); } catch (e) { /* no JSON body */ }
+
         if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Proxy HTTP ${res.status}: ${errText}`);
+            const msg = payload?.error || payload?.message || `HTTP ${res.status}`;
+            const err = new Error(msg);
+            err.status = res.status;
+            err.payload = payload;
+            throw err;
         }
-        return await res.json();
+        return payload;
     }
 
     // ================= REFRESH JWT =================
+    // POST /api/v1/auth/refresh-jwt with { refreshToken } in body.
+    // Server-side code sends only Content-Type header (no x-user-jwt),
+    // but your browser flow historically also works with x-user-jwt.
+    // We send it — harmless either way.
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
@@ -355,53 +342,26 @@
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
 
+        // Server returns whatever Kolex returned. Typical shapes:
+        //   { data: { jwt, refreshToken, user: {...} } }
+        //   { data: { data: { jwt, refreshToken, user: {...} } } }
         let data = resp;
         if (data && data.data && data.data.data) data = data.data;
+        const inner = data?.data || data;
 
-        if (data && data.data && data.data.jwt) {
-            return {
-                jwt: data.data.jwt,
-                refreshToken: data.data.refreshToken || refreshToken,
-                user: data.data.user || {}
-            };
-        }
-        if (data && data.jwt) {
-            return {
-                jwt: data.jwt,
-                refreshToken: data.refreshToken || refreshToken,
-                user: data.user || {}
-            };
-        }
-        throw new Error('No JWT in refresh response: ' + JSON.stringify(resp).slice(0, 300));
-    }
-
-    // ================= FETCH USER INFO =================
-    async function fetchUserInfo(jwt) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'x-user-jwt': jwt
-        };
-        const resp = await proxyRequest(USER_ENDPOINT, 'GET', headers, null);
-
-        let data = resp;
-        if (data && data.data && data.data.data) data = data.data;
-        const user = data?.data || data;
-
-        if (!user || typeof user !== 'object') {
-            throw new Error('Unexpected /user/info response: ' + JSON.stringify(resp).slice(0, 300));
+        if (!inner || !inner.jwt) {
+            throw new Error('No JWT in refresh response: ' + JSON.stringify(resp).slice(0, 300));
         }
 
         return {
-            userId: user.id ?? '—',
-            username: user.username ?? '—',
-            kyc: user.kycCompleted,
-            silvercoins: user.silvercoins ?? null,
-            usd: user.usd ?? null,
-            coronas: user.coronas ?? null
+            jwt: inner.jwt,
+            refreshToken: inner.refreshToken || refreshToken,
+            user: inner.user || {}
         };
     }
 
     // ================= FETCH FUNDS =================
+    // GET /api/v1/user/funds with x-user-jwt = new JWT
     async function fetchFunds(jwt) {
         const headers = {
             'Content-Type': 'application/json',
@@ -465,7 +425,7 @@
         if (r.success) {
             tdStatus.innerHTML = '<span class="badge badge-success">OK</span>';
         } else {
-            tdStatus.innerHTML = `<span class="badge badge-error" title="${r.error || ''}">FAIL</span>`;
+            tdStatus.innerHTML = `<span class="badge badge-error" title="${(r.error || '').replace(/"/g,'&quot;')}">FAIL</span>`;
         }
 
         tr.appendChild(tdIdx);
@@ -481,7 +441,7 @@
         tableBody.appendChild(tr);
     }
 
-    // ================= MAIN PROCESS =================
+    // ================= MAIN =================
     async function startProcessing() {
         if (isProcessing) return;
 
@@ -496,6 +456,7 @@
             return;
         }
 
+        // Reset
         isProcessing = true;
         stopFlag = false;
         totalTokens = tokens.length;
@@ -524,39 +485,22 @@
             const index = i;
 
             try {
+                // ---- 1) Refresh JWT ----
                 addLog(`[${i + 1}/${totalTokens}] Refreshing JWT...`, 'info');
                 const refreshResult = await refreshJWT(refreshToken);
                 const jwt = refreshResult.jwt;
-                const refreshUser = refreshResult.user || {};
+                const user = refreshResult.user || {};
 
-                addLog(`[${i + 1}/${totalTokens}] Fetching user info...`, 'info');
-                let userInfo = {
-                    userId: refreshUser.id ?? '—',
-                    username: refreshUser.username ?? '—',
-                    kyc: refreshUser.kycCompleted ?? null,
-                    silvercoins: null,
-                    usd: null,
-                    coronas: null
-                };
-                try {
-                    userInfo = await fetchUserInfo(jwt);
-                } catch (userErr) {
-                    addLog(`  ⚠ User info fetch failed: ${userErr.message}`, 'warning');
-                }
+                // User info comes from the refresh response itself
+                const userId   = user.id ?? '—';
+                const username = user.username ?? '—';
+                const kyc      = user.kycCompleted ?? null;
 
+                // ---- 2) Fetch funds ----
                 addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
-                let funds = {
-                    silvercoins: userInfo.silvercoins,
-                    coronas: userInfo.coronas,
-                    usd: userInfo.usd
-                };
+                let funds = { silvercoins: null, coronas: null, usd: null };
                 try {
-                    const f = await fetchFunds(jwt);
-                    funds = {
-                        silvercoins: f.silvercoins ?? userInfo.silvercoins,
-                        coronas: f.coronas ?? userInfo.coronas,
-                        usd: f.usd ?? userInfo.usd
-                    };
+                    funds = await fetchFunds(jwt);
                 } catch (fundsErr) {
                     addLog(`  ⚠ Funds fetch failed: ${fundsErr.message}`, 'warning');
                 }
@@ -565,9 +509,9 @@
                     index,
                     refreshToken,
                     jwt,
-                    userId: userInfo.userId,
-                    username: userInfo.username,
-                    kyc: userInfo.kyc,
+                    userId,
+                    username,
+                    kyc,
                     coronas: funds.coronas,
                     usd: funds.usd,
                     silvercoins: funds.silvercoins,
@@ -579,7 +523,7 @@
 
                 successCount++;
                 addLog(
-                    `  ✓ User: ${userInfo.username} | ID: ${userInfo.userId} | KYC: ${userInfo.kyc}` +
+                    `  ✓ User: ${username} | ID: ${userId} | KYC: ${kyc}` +
                     ` | Coronas: ${funds.coronas} | USD: ${funds.usd} | Silver: ${funds.silvercoins}`,
                     'success'
                 );
@@ -613,6 +557,7 @@
             }
         }
 
+        // Done
         isProcessing = false;
         startButton.disabled = false;
         stopButton.disabled = true;
@@ -629,7 +574,7 @@
         }
     }
 
-    // ================= DOWNLOAD CSV =================
+    // ================= CSV =================
     function downloadCSV() {
         if (results.length === 0) {
             showNotification('No results to download.', 'error');
@@ -708,15 +653,6 @@
     });
     downloadButton.addEventListener('click', downloadCSV);
     copyJwtButton.addEventListener('click', copyJWTs);
-
-    // ================= NAV LOADER (optional) =================
-    fetch('/nav-loader.js').then(r => r.text()).then(script => {
-        if (script && !script.includes('404')) {
-            const s = document.createElement('script');
-            s.textContent = script;
-            document.head.appendChild(s);
-        }
-    }).catch(() => {});
 </script>
 </body>
 </html>
