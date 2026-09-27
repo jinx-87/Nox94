@@ -258,10 +258,11 @@
 
 <script>
     // ================= CONFIG =================
-    const PROXY_URL = '/proxy';
-    const REFRESH_ENDPOINT = 'https://api.kolex.gg/api/v1/auth/refresh-jwt';
-    const USER_ENDPOINT = 'https://api.kolex.gg/api/v1/user/info';
-    const FUNDS_ENDPOINT = 'https://api.kolex.gg/api/v1/user/funds';
+    // Use RELATIVE paths — the /proxy prefixes the base URL itself
+    const PROXY_URL         = '/proxy';
+    const REFRESH_ENDPOINT  = '/api/v1/auth/refresh-jwt';
+    const USER_ENDPOINT     = '/api/v1/user/info';
+    const FUNDS_ENDPOINT    = '/api/v1/user/funds';
 
     // ================= STATE =================
     let isProcessing = false;
@@ -270,7 +271,7 @@
     let processedTokens = 0;
     let successCount = 0;
     let failCount = 0;
-    let results = []; // { index, refreshToken, jwt, userId, username, kyc, coronas, usd, silvercoins, success, error }
+    let results = [];
 
     // ================= DOM =================
     const $ = id => document.getElementById(id);
@@ -324,28 +325,28 @@
     }
 
     // ================= PROXY REQUEST =================
-async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
-    const res = await fetch(PROXY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            url: url,          // matches 717 proxy
-            //endpoint: url,     // matches lister/scanner proxy
-            method: method,
-            headers: headers,
-            data: data
-        })
-    });
-    if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`Proxy HTTP ${res.status}: ${errText}`);
+    // IMPORTANT: send `endpoint` (relative path only) — this is what
+    // the existing /proxy expects. Sending a full URL or the `url` key
+    // returns "Not Found" / "Endpoint is required".
+    async function proxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                endpoint: endpoint,
+                method: method,
+                headers: headers,
+                data: data
+            })
+        });
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Proxy HTTP ${res.status}: ${errText}`);
+        }
+        return await res.json();
     }
-    return await res.json();
-}
 
     // ================= REFRESH JWT =================
-    // Sends the refresh token BOTH as the payload AND as x-user-jwt header
-    // (per spec: header value = the refresh token itself)
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
@@ -354,29 +355,27 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
 
-        // Handle various response shapes
         let data = resp;
-        if (data && data.data && data.data.data) data = data.data; // unwrap proxy
+        if (data && data.data && data.data.data) data = data.data;
 
-        // Shape: { data: { jwt, refreshToken, ... } }
         if (data && data.data && data.data.jwt) {
             return {
                 jwt: data.data.jwt,
-                refreshToken: data.data.refreshToken || refreshToken
+                refreshToken: data.data.refreshToken || refreshToken,
+                user: data.data.user || {}
             };
         }
-        // Shape: { jwt, refreshToken, ... }
         if (data && data.jwt) {
             return {
                 jwt: data.jwt,
-                refreshToken: data.refreshToken || refreshToken
+                refreshToken: data.refreshToken || refreshToken,
+                user: data.user || {}
             };
         }
         throw new Error('No JWT in refresh response: ' + JSON.stringify(resp).slice(0, 300));
     }
 
     // ================= FETCH USER INFO =================
-    // Returns { userId, username, kyc, silvercoins, usd, coronas }
     async function fetchUserInfo(jwt) {
         const headers = {
             'Content-Type': 'application/json',
@@ -385,18 +384,17 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
         const resp = await proxyRequest(USER_ENDPOINT, 'GET', headers, null);
 
         let data = resp;
-        if (data && data.data && data.data.data) data = data.data; // unwrap proxy
+        if (data && data.data && data.data.data) data = data.data;
         const user = data?.data || data;
 
         if (!user || typeof user !== 'object') {
-            throw new Error('Unexpected /user/ response: ' + JSON.stringify(resp).slice(0, 300));
+            throw new Error('Unexpected /user/info response: ' + JSON.stringify(resp).slice(0, 300));
         }
 
         return {
             userId: user.id ?? '—',
             username: user.username ?? '—',
             kyc: user.kycCompleted,
-            // These may exist directly on the user object too
             silvercoins: user.silvercoins ?? null,
             usd: user.usd ?? null,
             coronas: user.coronas ?? null
@@ -404,7 +402,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
     }
 
     // ================= FETCH FUNDS =================
-    // Returns { silvercoins, coronas, usd }
     async function fetchFunds(jwt) {
         const headers = {
             'Content-Type': 'application/json',
@@ -413,7 +410,7 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
         const resp = await proxyRequest(FUNDS_ENDPOINT, 'GET', headers, null);
 
         let data = resp;
-        if (data && data.data && data.data.data) data = data.data; // unwrap
+        if (data && data.data && data.data.data) data = data.data;
         const funds = data?.data || data;
 
         if (!funds || typeof funds !== 'object') {
@@ -431,11 +428,9 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
     function addRowToTable(r) {
         const tr = document.createElement('tr');
 
-        // #
         const tdIdx = document.createElement('td');
         tdIdx.textContent = r.index + 1;
 
-        // JWT (click to copy)
         const tdJwt = document.createElement('td');
         tdJwt.className = 'jwt-cell';
         tdJwt.textContent = r.jwt || '—';
@@ -448,31 +443,24 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
             });
         }
 
-        // User ID
         const tdUserId = document.createElement('td');
         tdUserId.textContent = r.userId || '—';
 
-        // Username
         const tdUsername = document.createElement('td');
         tdUsername.textContent = r.username || '—';
 
-        // KYC
         const tdKyc = document.createElement('td');
         tdKyc.textContent = r.kyc === true ? 'Yes' : r.kyc === false ? 'No' : '—';
 
-        // Coronas
         const tdCoronas = document.createElement('td');
         tdCoronas.textContent = r.coronas ?? '—';
 
-        // USD
         const tdUsd = document.createElement('td');
         tdUsd.textContent = r.usd ?? '—';
 
-        // Silvercoins
         const tdSilver = document.createElement('td');
         tdSilver.textContent = r.silvercoins ?? '—';
 
-        // Status
         const tdStatus = document.createElement('td');
         if (r.success) {
             tdStatus.innerHTML = '<span class="badge badge-success">OK</span>';
@@ -497,7 +485,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
     async function startProcessing() {
         if (isProcessing) return;
 
-        // Read tokens
         const raw = refreshTokensInput.value.trim();
         if (!raw) {
             showNotification('Please paste at least one refresh token.', 'error');
@@ -509,7 +496,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
             return;
         }
 
-        // Reset
         isProcessing = true;
         stopFlag = false;
         totalTokens = tokens.length;
@@ -538,17 +524,16 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
             const index = i;
 
             try {
-                // 1) Refresh JWT (header x-user-jwt = refresh token)
                 addLog(`[${i + 1}/${totalTokens}] Refreshing JWT...`, 'info');
                 const refreshResult = await refreshJWT(refreshToken);
                 const jwt = refreshResult.jwt;
+                const refreshUser = refreshResult.user || {};
 
-                // 2) Fetch user info with the new JWT
                 addLog(`[${i + 1}/${totalTokens}] Fetching user info...`, 'info');
                 let userInfo = {
-                    userId: '—',
-                    username: '—',
-                    kyc: null,
+                    userId: refreshUser.id ?? '—',
+                    username: refreshUser.username ?? '—',
+                    kyc: refreshUser.kycCompleted ?? null,
                     silvercoins: null,
                     usd: null,
                     coronas: null
@@ -559,7 +544,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
                     addLog(`  ⚠ User info fetch failed: ${userErr.message}`, 'warning');
                 }
 
-                // 3) Fetch funds with the new JWT
                 addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
                 let funds = {
                     silvercoins: userInfo.silvercoins,
@@ -624,13 +608,11 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
             updateStatsUI();
             progressBar.style.width = `${((i + 1) / totalTokens) * 100}%`;
 
-            // Delay between tokens
             if (i < tokens.length - 1 && !stopFlag) {
                 await sleep(delay);
             }
         }
 
-        // Done
         isProcessing = false;
         startButton.disabled = false;
         stopButton.disabled = true;
@@ -670,7 +652,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
                 r.success ? 'OK' : 'FAIL',
                 r.error || ''
             ];
-            // Escape commas/quotes
             const escaped = row.map(v => {
                 const s = String(v);
                 if (s.includes(',') || s.includes('"') || s.includes('\n')) {
@@ -708,7 +689,6 @@ async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
             await navigator.clipboard.writeText(text);
             showNotification(`Copied ${jwts.length} JWT(s) to clipboard.`, 'success');
         } catch (err) {
-            // Fallback
             const ta = document.createElement('textarea');
             ta.value = text;
             document.body.appendChild(ta);
