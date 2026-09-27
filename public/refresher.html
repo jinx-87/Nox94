@@ -234,14 +234,17 @@
     <div class="log-container" id="logContainer">
         <div class="log-entry log-info">Ready. Paste refresh tokens and click Start.</div>
     </div>
+<script src="/nav-loader.js"></script>
 
 <script>
     // ================= CONFIG =================
-    // IMPORTANT: These are RELATIVE paths. The /proxy endpoint on the server
-    // prepends API_BASE (env var) to build the full URL — exactly like lister.html.
-    const PROXY_URL         = '/proxy';
-    const REFRESH_ENDPOINT  = '/api/v1/auth/refresh-jwt';
-    const FUNDS_ENDPOINT    = '/api/v1/user/funds';
+    // IMPORTANT: These endpoints follow the SAME pattern as your working tools.
+    // The server's /proxy endpoint prepends API_BASE to these.
+    // Working tools use: /user/funds, /market/list, /collections/...
+    // So we use: /auth/refresh-jwt and /user/funds  (NO /api/v1 prefix)
+    const PROXY_URL        = '/proxy';
+    const REFRESH_ENDPOINT = '/auth/refresh-jwt';
+    const FUNDS_ENDPOINT   = '/user/funds';
 
     // ================= STATE =================
     let isProcessing = false;
@@ -302,8 +305,7 @@
     }
 
     // ================= PROXY REQUEST =================
-    // Same shape as lister.html: { endpoint, method, headers, data }
-    // Server does: url = API_BASE + endpoint
+    // Identical to the working tools (crafter.html, scanner.html, etc.)
     async function proxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
         const res = await fetch(PROXY_URL, {
             method: 'POST',
@@ -316,24 +318,16 @@
             })
         });
 
-        let payload = null;
-        try { payload = await res.json(); } catch (e) { /* no JSON body */ }
-
         if (!res.ok) {
-            const msg = payload?.error || payload?.message || `HTTP ${res.status}`;
-            const err = new Error(msg);
-            err.status = res.status;
-            err.payload = payload;
-            throw err;
+            const errorText = await res.text();
+            throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
         }
-        return payload;
+
+        return await res.json();
     }
 
     // ================= REFRESH JWT =================
-    // POST /api/v1/auth/refresh-jwt with { refreshToken } in body.
-    // Server-side code sends only Content-Type header (no x-user-jwt),
-    // but your browser flow historically also works with x-user-jwt.
-    // We send it — harmless either way.
+    // Tries multiple endpoint paths since the exact path may vary
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
@@ -342,9 +336,7 @@
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
 
-        // Server returns whatever Kolex returned. Typical shapes:
-        //   { data: { jwt, refreshToken, user: {...} } }
-        //   { data: { data: { jwt, refreshToken, user: {...} } } }
+        // Handle nested response shapes
         let data = resp;
         if (data && data.data && data.data.data) data = data.data;
         const inner = data?.data || data;
@@ -361,7 +353,7 @@
     }
 
     // ================= FETCH FUNDS =================
-    // GET /api/v1/user/funds with x-user-jwt = new JWT
+    // Same endpoint style as crafter.html: '/user/funds'
     async function fetchFunds(jwt) {
         const headers = {
             'Content-Type': 'application/json',
@@ -369,9 +361,14 @@
         };
         const resp = await proxyRequest(FUNDS_ENDPOINT, 'GET', headers, null);
 
-        let data = resp;
-        if (data && data.data && data.data.data) data = data.data;
-        const funds = data?.data || data;
+        // Handle the same nested response shape as crafter.html:
+        // response.data.silvercoins
+        let funds = null;
+        if (resp && resp.data && typeof resp.data === 'object') {
+            funds = resp.data;
+        } else if (resp && typeof resp === 'object') {
+            funds = resp;
+        }
 
         if (!funds || typeof funds !== 'object') {
             return { silvercoins: null, coronas: null, usd: null };
@@ -485,18 +482,15 @@
             const index = i;
 
             try {
-                // ---- 1) Refresh JWT ----
                 addLog(`[${i + 1}/${totalTokens}] Refreshing JWT...`, 'info');
                 const refreshResult = await refreshJWT(refreshToken);
                 const jwt = refreshResult.jwt;
                 const user = refreshResult.user || {};
 
-                // User info comes from the refresh response itself
                 const userId   = user.id ?? '—';
                 const username = user.username ?? '—';
                 const kyc      = user.kycCompleted ?? null;
 
-                // ---- 2) Fetch funds ----
                 addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
                 let funds = { silvercoins: null, coronas: null, usd: null };
                 try {
