@@ -340,7 +340,7 @@
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
-            'x-user-jwt': 'undefined' // some endpoints need this; refresh usually doesn't
+            //'x-user-jwt': 'undefined' // some endpoints need this; refresh usually doesn't
         };
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
