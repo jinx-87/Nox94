@@ -324,18 +324,24 @@
     }
 
     // ================= PROXY REQUEST =================
-    async function proxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
-        const res = await fetch(PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint, method, headers, data })
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Proxy HTTP ${res.status}: ${errText}`);
-        }
-        return await res.json();
+async function proxyRequest(url, method = 'GET', headers = {}, data = null) {
+    const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            url: url,          // matches 717 proxy
+            endpoint: url,     // matches lister/scanner proxy
+            method: method,
+            headers: headers,
+            data: data
+        })
+    });
+    if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Proxy HTTP ${res.status}: ${errText}`);
     }
+    return await res.json();
+}
 
     // ================= REFRESH JWT =================
     // Sends the refresh token BOTH as the payload AND as x-user-jwt header
