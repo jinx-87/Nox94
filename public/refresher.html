@@ -234,16 +234,12 @@
     <div class="log-container" id="logContainer">
         <div class="log-entry log-info">Ready. Paste refresh tokens and click Start.</div>
     </div>
-<script src="/nav-loader.js"></script>
 
 <script>
     // ================= CONFIG =================
-    // IMPORTANT: These endpoints follow the SAME pattern as your working tools.
-    // The server's /proxy endpoint prepends API_BASE to these.
-    // Working tools use: /user/funds, /market/list, /collections/...
-    // So we use: /auth/refresh-jwt and /user/funds  (NO /api/v1 prefix)
     const PROXY_URL        = '/proxy';
     const REFRESH_ENDPOINT = '/auth/refresh-jwt';
+    const INFO_ENDPOINT    = '/user/info';
     const FUNDS_ENDPOINT   = '/user/funds';
 
     // ================= STATE =================
@@ -305,7 +301,6 @@
     }
 
     // ================= PROXY REQUEST =================
-    // Identical to the working tools (crafter.html, scanner.html, etc.)
     async function proxyRequest(endpoint, method = 'GET', headers = {}, data = null) {
         const res = await fetch(PROXY_URL, {
             method: 'POST',
@@ -327,7 +322,6 @@
     }
 
     // ================= REFRESH JWT =================
-    // Tries multiple endpoint paths since the exact path may vary
     async function refreshJWT(refreshToken) {
         const headers = {
             'Content-Type': 'application/json',
@@ -336,7 +330,6 @@
         const payload = { refreshToken: refreshToken };
         const resp = await proxyRequest(REFRESH_ENDPOINT, 'POST', headers, payload);
 
-        // Handle nested response shapes
         let data = resp;
         if (data && data.data && data.data.data) data = data.data;
         const inner = data?.data || data;
@@ -352,8 +345,29 @@
         };
     }
 
+    // ================= FETCH USER INFO =================
+    // GET /user/info with x-user-jwt = new JWT
+    // Returns full user data (id, username, kycCompleted, etc.)
+    async function fetchUserInfo(jwt) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'x-user-jwt': jwt
+        };
+        const resp = await proxyRequest(INFO_ENDPOINT, 'GET', headers, null);
+
+        // Unwrap nested data shapes
+        let data = resp;
+        if (data && data.data && data.data.data) data = data.data;
+        const user = data?.data || data;
+
+        if (!user || typeof user !== 'object') {
+            return {};
+        }
+
+        return user;
+    }
+
     // ================= FETCH FUNDS =================
-    // Same endpoint style as crafter.html: '/user/funds'
     async function fetchFunds(jwt) {
         const headers = {
             'Content-Type': 'application/json',
@@ -361,8 +375,6 @@
         };
         const resp = await proxyRequest(FUNDS_ENDPOINT, 'GET', headers, null);
 
-        // Handle the same nested response shape as crafter.html:
-        // response.data.silvercoins
         let funds = null;
         if (resp && resp.data && typeof resp.data === 'object') {
             funds = resp.data;
@@ -482,15 +494,30 @@
             const index = i;
 
             try {
+                // ---- 1) Refresh JWT ----
                 addLog(`[${i + 1}/${totalTokens}] Refreshing JWT...`, 'info');
                 const refreshResult = await refreshJWT(refreshToken);
                 const jwt = refreshResult.jwt;
-                const user = refreshResult.user || {};
+
+                // Fallback user from refresh response (may be empty)
+                let user = refreshResult.user || {};
+
+                // ---- 2) Fetch user info ----
+                addLog(`[${i + 1}/${totalTokens}] Fetching user info...`, 'info');
+                try {
+                    const infoUser = await fetchUserInfo(jwt);
+                    // Merge: prefer /user/info data, fall back to refresh user
+                    user = { ...user, ...infoUser };
+                    addLog(`  ✓ Info: id=${infoUser.id ?? '—'} | username=${infoUser.username ?? '—'} | kycCompleted=${infoUser.kycCompleted ?? '—'}`, 'success');
+                } catch (infoErr) {
+                    addLog(`  ⚠ User info fetch failed: ${infoErr.message}`, 'warning');
+                }
 
                 const userId   = user.id ?? '—';
                 const username = user.username ?? '—';
                 const kyc      = user.kycCompleted ?? null;
 
+                // ---- 3) Fetch funds ----
                 addLog(`[${i + 1}/${totalTokens}] Fetching funds...`, 'info');
                 let funds = { silvercoins: null, coronas: null, usd: null };
                 try {
