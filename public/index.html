@@ -217,6 +217,33 @@
     }
     .positive { color: var(--good); }
     .negative { color: var(--bad); }
+    /* Spinner config card */
+    .spinner-config-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+    .spinner-config-card h2 {
+      background: #dbeafe;
+    }
+    .config-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+    }
+    .config-row .input-group input {
+      width: 160px;
+    }
+    .config-row .input-group input.pack-input {
+      width: 340px;
+    }
+    .save-indicator {
+      font-size: 13px;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .save-indicator.ok { color: var(--good); }
+    .save-indicator.err { color: var(--bad); }
   </style>
 </head>
 <body>
@@ -250,6 +277,28 @@
       <div class="stat-card">
         <div class="stat-value" id="totalPacks">0</div>
         <div class="stat-label">Total Packs</div>
+      </div>
+    </div>
+
+    <!-- Spinner / Pack Config -->
+    <div class="card spinner-config-card">
+      <h2>🎰 Spinner &amp; Pack Configuration (global, saved to disk)</h2>
+      <div class="section">
+        <div class="config-row">
+          <div class="input-group">
+            <label>Spinner ID:</label>
+            <input type="number" id="spinnerIdInput" min="1" value="7063">
+          </div>
+          <div class="input-group">
+            <label>Pack IDs:</label>
+            <input type="text" id="packIdsInput" class="pack-input" value="11953, 12053, 12079, 12121, 12145, 12316, 14356, 12343, 12350, 14554" placeholder="Comma-separated e.g. 12053, 12013, 12079">
+          </div>
+          <button class="btn primary" id="saveSpinnerConfig">💾 Save Config</button>
+          <span id="spinnerConfigStatus" class="save-indicator"></span>
+        </div>
+        <div class="muted" style="margin-top: 10px; font-size: 12px;">
+          These values are used for every spin operation. Pack IDs trigger automatic pack opening when the spin result matches. Changes are persisted to <code>spinner-config.json</code> on the server.
+        </div>
       </div>
     </div>
 
@@ -313,11 +362,13 @@
       },
       activeCount: 0,
       queueLength: 0,
-      totalUsers: 0
+      totalUsers: 0,
+      spinnerConfig: { spinnerId: 7063, packIds: [11953, 12053, 12079, 12121, 12145, 12316, 14356, 12343, 12350, 14554] }
     };
 
     let autoRefresh = true;
     let lastScrollPosition = 0;
+    let spinnerConfigDirty = false;
 
     // API Functions
     async function fetchUsers() {
@@ -338,6 +389,21 @@
       return r.json();
     }
 
+    async function fetchSpinnerConfig() {
+      const r = await fetch('/api/spinner-config');
+      if (!r.ok) throw new Error('Failed to fetch spinner config');
+      return r.json();
+    }
+
+    async function saveSpinnerConfig(spinnerId, packIds) {
+      const r = await fetch('/api/spinner-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spinnerId, packIds })
+      });
+      return r.json();
+    }
+
     async function sendCommand(endpoint, body = {}) {
       const r = await fetch(endpoint, {
         method: 'POST',
@@ -345,6 +411,49 @@
         body: JSON.stringify(body)
       });
       return r.json();
+    }
+
+    // Spinner config UI
+    function fillSpinnerConfigInputs(config) {
+      if (!config) return;
+      // Don't overwrite while user is typing
+      if (spinnerConfigDirty) return;
+      document.getElementById('spinnerIdInput').value = config.spinnerId || 7063;
+      document.getElementById('packIdsInput').value = (config.packIds || []).join(', ');
+    }
+
+    function showConfigStatus(msg, ok = true) {
+      const el = document.getElementById('spinnerConfigStatus');
+      el.textContent = msg;
+      el.className = `save-indicator ${ok ? 'ok' : 'err'}`;
+      if (ok) {
+        setTimeout(() => { el.textContent = ''; }, 3000);
+      }
+    }
+
+    async function handleSaveSpinnerConfig() {
+      const spinnerIdVal = document.getElementById('spinnerIdInput').value.trim();
+      const packIdsVal = document.getElementById('packIdsInput').value.trim();
+      const spinnerId = parseInt(spinnerIdVal);
+      if (isNaN(spinnerId) || spinnerId <= 0) {
+        showConfigStatus('❌ Spinner ID must be a positive number', false);
+        return;
+      }
+      if (!packIdsVal) {
+        showConfigStatus('❌ Pack IDs cannot be empty', false);
+        return;
+      }
+      try {
+        const res = await saveSpinnerConfig(spinnerId, packIdsVal);
+        if (res.success) {
+          spinnerConfigDirty = false;
+          showConfigStatus(`✓ Saved (spinnerId=${res.config.spinnerId}, packs=[${res.config.packIds.join(', ')}])`);
+        } else {
+          showConfigStatus(`❌ ${res.error || 'Save failed'}`, false);
+        }
+      } catch (err) {
+        showConfigStatus(`❌ ${err.message}`, false);
+      }
     }
 
     // Render Functions
@@ -357,7 +466,6 @@
         return;
       }
 
-      // Calculate totals
       const totals = {
         totalSpins: userIds.reduce((sum, id) => sum + (users[id].totalSpinsRun || 0), 0),
         totalPacks: userIds.reduce((sum, id) => sum + (users[id].totalPacksOpened || 0), 0)
@@ -373,7 +481,6 @@
         const statusClass = `badge-${u.status || 'idle'}`;
         const progressPercent = u.spinsRemaining ? ((u.spinsDoneInRound || 0) / ((u.spinsDoneInRound || 0) + u.spinsRemaining) * 100) : 0;
         
-        // Calculate funds difference
         const fundsDiff = u.currentFunds - u.initialFunds;
         const diffClass = fundsDiff > 0 ? 'positive' : (fundsDiff < 0 ? 'negative' : '');
         const diffSign = fundsDiff > 0 ? '+' : '';
@@ -391,7 +498,6 @@
               </div>
             </div>
             
-            <!-- Full JWT token for copying -->
             <div class="jwt-token" title="Select all to copy">
               ${u.jwtToken || 'No token'}
             </div>
@@ -437,7 +543,6 @@
 
       panel.innerHTML = parts.join('\n');
       
-      // Add event listeners
       panel.querySelectorAll('button[data-act="refresh"]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const id = e.currentTarget.getAttribute('data-id');
@@ -470,7 +575,6 @@
         return;
       }
       
-      // Save scroll position
       lastScrollPosition = box.scrollTop;
       
       const lines = logs.map(entry => {
@@ -479,8 +583,6 @@
       });
       
       box.textContent = lines.join('\n');
-      
-      // Restore scroll position
       box.scrollTop = lastScrollPosition;
     }
 
@@ -494,7 +596,12 @@
       systemStatus.className = `status-badge ${state.isPaused ? 'badge-warning' : (state.activeCount > 0 ? 'badge-spinning' : 'badge-idle')}`;
       
       document.getElementById('statusDetail').textContent = 
-        `Max: ${state.settings.maxConcurrent}, Delay: ${state.settings.spinDelay}s, Min: ${state.settings.minFundsThreshold}`;
+        `Max: ${state.settings.maxConcurrent}, Delay: ${state.settings.spinDelay}s, Min: ${state.settings.minFundsThreshold}, Spinner: ${state.spinnerConfig?.spinnerId ?? '?'}`;
+
+      // Sync spinner config inputs from server if not being edited
+      if (state.spinnerConfig) {
+        fillSpinnerConfigInputs(state.spinnerConfig);
+      }
     }
 
     // Load Functions
@@ -553,6 +660,11 @@
       }
     });
 
+    // Spinner config handlers
+    document.getElementById('spinnerIdInput').addEventListener('input', () => { spinnerConfigDirty = true; });
+    document.getElementById('packIdsInput').addEventListener('input', () => { spinnerConfigDirty = true; });
+    document.getElementById('saveSpinnerConfig').addEventListener('click', handleSaveSpinnerConfig);
+
     // Auto-refresh every 3 seconds
     setInterval(() => {
       if (autoRefresh) {
@@ -561,7 +673,15 @@
     }, 3000);
 
     // Initial load
-    loadAll();
+    (async () => {
+      try {
+        const cfg = await fetchSpinnerConfig();
+        fillSpinnerConfigInputs(cfg);
+      } catch (e) {
+        console.error('Failed to load spinner config on boot:', e);
+      }
+      loadAll();
+    })();
   </script>
 </body>
 </html>

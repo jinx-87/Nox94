@@ -14,6 +14,7 @@ const CONFIG = {
     BASE_URL_ACH: process.env.BASE_URL_ACH,
     BASE_URL_MONEY: process.env.BASE_URL_MONEY,
     USERS_FILE: 'users.json',
+    SPINNER_CONFIG_FILE: 'spinner-config.json',
 };
 
 // Prize mapping for console logs only
@@ -27,16 +28,19 @@ const PRIZE_MAP = {
     12310: '1,000 Spraycoins'
 };
 
-// Pack IDs that need opening
-const PACK_IDS = [12053, 12013, 12079, 12316, 14356];
-
 // Retry configuration
 const RETRY_CONFIG = {
     MAX_RETRIES: 3,
     INITIAL_DELAY: 5000,      // 5 seconds
     BACKOFF_MULTIPLIER: 3,    // 5, 15, 45 seconds
-    RATE_LIMIT_DELAY: 25000,   // 45 seconds for 429 errors
+    RATE_LIMIT_DELAY: 25000,   // 25 seconds for 429 errors
     MAX_RETRY_DELAY: 60000     // Max 60 seconds
+};
+
+// ─── GLOBAL SPINNER CONFIG (dynamic, persisted to disk) ───
+let globalSpinnerConfig = {
+    spinnerId: 7063,
+    packIds: [11953, 12053, 12079, 12121, 12145, 12316, 14356, 12343, 12350, 14554]
 };
 
 // Global state
@@ -67,6 +71,39 @@ function log(userId, message, type = 'INFO') {
     // Store for dashboard (limited to 200)
     debugLogs.unshift(logEntry);
     if (debugLogs.length > 200) debugLogs.pop();
+}
+
+// ─── SPINNER CONFIG LOAD/SAVE ───
+async function loadSpinnerConfig() {
+    try {
+        const data = await fs.readFile(CONFIG.SPINNER_CONFIG_FILE, 'utf8');
+        const parsed = JSON.parse(data);
+        globalSpinnerConfig = {
+            spinnerId: Number(parsed.spinnerId) || 7063,
+            packIds: Array.isArray(parsed.packIds)
+                ? parsed.packIds.map(Number).filter(n => !isNaN(n))
+                : [11953, 12053, 12079, 12121, 12145, 12316, 14356, 12343, 12350, 14554]
+        };
+        console.log(`[INIT] Loaded spinner config: spinnerId=${globalSpinnerConfig.spinnerId}, packIds=${globalSpinnerConfig.packIds.join(',')}`);
+    } catch (err) {
+        // File doesn't exist yet - write defaults
+        console.log('[INIT] No spinner-config.json found, writing defaults...');
+        try {
+            await fs.writeFile(CONFIG.SPINNER_CONFIG_FILE, JSON.stringify(globalSpinnerConfig, null, 2));
+        } catch (writeErr) {
+            console.error('Failed to write default spinner config:', writeErr);
+        }
+    }
+}
+
+async function saveSpinnerConfig() {
+    try {
+        await fs.writeFile(CONFIG.SPINNER_CONFIG_FILE, JSON.stringify(globalSpinnerConfig, null, 2));
+        return true;
+    } catch (err) {
+        console.error('Failed to save spinner config:', err);
+        return false;
+    }
 }
 
 // API request function with detailed console logging and error handling
@@ -338,6 +375,7 @@ async function claimAchievements(userId) {
 }
 
 // Buy and execute spin as ONE ATOMIC OPERATION
+// Uses dynamic globalSpinnerConfig.spinnerId and globalSpinnerConfig.packIds
 async function buyAndSpinAtomic(userId) {
     const user = userData[userId];
     if (!user?.jwtToken) return { success: false };
@@ -363,12 +401,12 @@ async function buyAndSpinAtomic(userId) {
         };
     }
 
-    // Execute spin (only if buy succeeded)
+    // Execute spin with DYNAMIC spinner ID
     const spinResult = await makeAPIRequest(
         CONFIG.BASE_URL_SPIN,
         'POST',
         { 'x-user-jwt': user.jwtToken },
-        { spinnerId: 7030 },
+        { spinnerId: globalSpinnerConfig.spinnerId },
         userId
     );
 
@@ -394,9 +432,9 @@ async function buyAndSpinAtomic(userId) {
     const prizeName = PRIZE_MAP[resultId] || `Prize ID ${resultId}`;
     console.log(`[${new Date().toISOString()}] [SPIN] ${userId}: 🎰 Result: ${prizeName}`);
 
-    // Check for pack
+    // Check for pack using DYNAMIC pack ID list
     let packOpened = false;
-    if (PACK_IDS.includes(resultId) && spinData.packs?.length > 0) {
+    if (globalSpinnerConfig.packIds.includes(resultId) && spinData.packs?.length > 0) {
         const packId = spinData.packs[0].id;
         log(userId, `Got pack from spin!`, 'PACK');
         
@@ -593,6 +631,10 @@ async function addUsersToActivePool() {
 async function initializeAllUsers() {
     log('system', 'Initializing application...', 'INIT');
     
+    // Load dynamic spinner config first
+    await loadSpinnerConfig();
+    log('system', `Spinner config: spinnerId=${globalSpinnerConfig.spinnerId}, packs=[${globalSpinnerConfig.packIds.join(', ')}]`, 'INIT');
+    
     const success = await loadUserConfig();
     if (!success) return false;
     
@@ -638,7 +680,7 @@ function startProcessing(newSettings) {
     });
     
     addUsersToActivePool().then(() => {
-        log('system', `Processing started (Max: ${settings.maxConcurrent}, Delay: ${settings.spinDelay}s, Min Funds: ${settings.minFundsThreshold})`, 'START');
+        log('system', `Processing started (Max: ${settings.maxConcurrent}, Delay: ${settings.spinDelay}s, Min Funds: ${settings.minFundsThreshold}, SpinnerId: ${globalSpinnerConfig.spinnerId})`, 'START');
         
         if (activeUserIds.length > 0) {
             processNextUser();
@@ -730,8 +772,48 @@ app.get('/api/system-state', (req, res) => {
         isPaused,
         activeCount: activeUserIds.length,
         queueLength: userQueue.length,
-        totalUsers: Object.keys(userData).length
+        totalUsers: Object.keys(userData).length,
+        spinnerConfig: globalSpinnerConfig
     });
+});
+
+// ─── SPINNER CONFIG ENDPOINTS ───
+app.get('/api/spinner-config', (req, res) => {
+    res.json(globalSpinnerConfig);
+});
+
+app.post('/api/spinner-config', async (req, res) => {
+    const { spinnerId, packIds } = req.body;
+
+    if (spinnerId !== undefined) {
+        const parsed = parseInt(spinnerId);
+        if (isNaN(parsed) || parsed <= 0) {
+            return res.status(400).json({ success: false, error: 'spinnerId must be a positive integer' });
+        }
+        globalSpinnerConfig.spinnerId = parsed;
+    }
+
+    if (packIds !== undefined) {
+        let parsedPacks = [];
+        if (typeof packIds === 'string') {
+            parsedPacks = packIds.split(',')
+                .map(id => parseInt(id.trim()))
+                .filter(id => !isNaN(id) && id > 0);
+        } else if (Array.isArray(packIds)) {
+            parsedPacks = packIds.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0);
+        } else {
+            return res.status(400).json({ success: false, error: 'packIds must be array or comma-separated string' });
+        }
+        globalSpinnerConfig.packIds = parsedPacks;
+    }
+
+    const saved = await saveSpinnerConfig();
+    if (!saved) {
+        return res.status(500).json({ success: false, error: 'Failed to persist config to disk' });
+    }
+
+    log('system', `⚙️ Spinner config updated: spinnerId=${globalSpinnerConfig.spinnerId}, packs=[${globalSpinnerConfig.packIds.join(', ')}]`, 'CONFIG');
+    res.json({ success: true, config: globalSpinnerConfig });
 });
 
 // Control endpoints
